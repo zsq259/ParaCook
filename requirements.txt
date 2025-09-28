@@ -1,0 +1,3 @@
+anthropic==0.68.1
+openai==1.109.1
+Requests==2.32.5

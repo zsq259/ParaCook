@@ -6,19 +6,20 @@ trap "echo '终止所有子进程'; kill 0; exit" SIGINT
 MODELS=(
     # "gpt-5"
     # "gpt-4.1"
-    "gemini-2.5-pro"
+    # "gemini-2.5-pro"
     # "claude-opus-4-1-20250805"
+    "DeepSeek-V3"
 )
 MOTHODS=("IO" "CoT")
 
-# RECIPES=("sashimi" "salad" "sushi" "burger" "pasta" "burrito")
-RECIPES=("pasta" "burrito")
+RECIPES=("sashimi" "salad" "sushi" "burger" "pasta" "burrito")
+# RECIPES=("pasta" "burrito")
 AGENT_NUMS=(1 2 3)
 ORDERS_NUMS=(1 2 3 4)
-# SEEDS=(42 84 126 128 256)
-SEEDS=(42)
+SEEDS=(42 84 126 128 256)
+# SEEDS=(42)
 
-MAX_JOBS=1
+MAX_JOBS=8
 job_count=0
 
 for MODEL in "${MODELS[@]}"; do

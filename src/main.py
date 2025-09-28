@@ -1,7 +1,6 @@
 # main.py
 
 import json
-import yaml
 import sys
 import os
 import argparse
@@ -20,10 +19,6 @@ name_to_agent = {
     "ReAct": ReActAgent,
     "Fixed": FixedAgent
 }
-
-def load_yaml_config(yaml_path):
-    with open(yaml_path, 'r', encoding='utf-8') as f:
-        return yaml.safe_load(f)
 
 def load_data(filename):
     with open(filename, 'r', encoding='utf-8') as f:
@@ -114,11 +109,5 @@ def parse_arguments():
 
 if __name__ == "__main__":
     args = parse_arguments()
-    if args.config:
-        if args.config.endwith(".yaml") or args.config.endwith(".yml"):
-            config_data = load_yaml_config(args.config)
-            for key, value in config_data.items():
-                if hasattr(args, key) and value is not None:
-                    setattr(args, key, value)
-
+    
     run_test(args)
