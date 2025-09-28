@@ -1,0 +1,145 @@
+{
+    "name": "kitchen",
+    "width": 10,
+    "height": 8,
+    "agents": [
+        {
+            "name": "agent1",
+            "x": 4,
+            "y": 6
+        }
+    ],
+    "tiles": [
+        {
+            "x": 0,
+            "y": 1,
+            "type": "station",
+            "name": "dispenser1",
+            "provides": "chicken"
+        },
+        {
+            "x": 7,
+            "y": 0,
+            "type": "station",
+            "name": "dispenser2",
+            "provides": "rice"
+        },
+        {
+            "x": 9,
+            "y": 6,
+            "type": "station",
+            "name": "dispenser3",
+            "provides": "meat"
+        },
+        {
+            "x": 4,
+            "y": 0,
+            "type": "station",
+            "name": "dispenser4",
+            "provides": "mushroom"
+        },
+        {
+            "x": 3,
+            "y": 7,
+            "type": "station",
+            "name": "dispenser5",
+            "provides": "tortilla"
+        },
+        {
+            "x": 9,
+            "y": 5,
+            "type": "station",
+            "name": "chopping_board1"
+        },
+        {
+            "x": 0,
+            "y": 2,
+            "type": "station",
+            "name": "chopping_board2"
+        },
+        {
+            "x": 4,
+            "y": 7,
+            "type": "station",
+            "name": "stove1",
+            "item": "pan"
+        },
+        {
+            "x": 9,
+            "y": 4,
+            "type": "station",
+            "name": "stove2",
+            "item": "pan"
+        },
+        {
+            "x": 0,
+            "y": 6,
+            "type": "station",
+            "name": "stove3",
+            "item": "pot"
+        },
+        {
+            "x": 2,
+            "y": 0,
+            "type": "station",
+            "name": "stove4",
+            "item": "pot"
+        },
+        {
+            "x": 0,
+            "y": 4,
+            "type": "station",
+            "name": "serving_window"
+        },
+        {
+            "x": 2,
+            "y": 7,
+            "type": "station",
+            "name": "sink"
+        },
+        {
+            "x": 1,
+            "y": 0,
+            "type": "station",
+            "name": "plate_return"
+        },
+        {
+            "x": 3,
+            "y": 5,
+            "type": "station",
+            "name": "table1",
+            "item": "plate"
+        },
+        {
+            "x": 6,
+            "y": 2,
+            "type": "station",
+            "name": "table2",
+            "item": "plate"
+        },
+        {
+            "x": 7,
+            "y": 3,
+            "type": "station",
+            "name": "table3"
+        },
+        {
+            "x": 2,
+            "y": 4,
+            "type": "station",
+            "name": "table4"
+        },
+        {
+            "x": 1,
+            "y": 4,
+            "type": "obstacle",
+            "name": "wall"
+        },
+        {
+            "x": 6,
+            "y": 4,
+            "type": "obstacle",
+            "name": "wall"
+        }
+    ]
+}

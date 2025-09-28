@@ -1,0 +1,34 @@
+[
+    {
+        "name": "lettuce",
+        "states": ["raw", "chopped"]        
+    },
+    {
+        "name": "tomato",
+        "states": ["raw", "chopped"]        
+    },
+    {
+        "name": "bread",
+        "states": ["raw"]        
+    },
+    {
+        "name": "meat",
+        "states": ["raw", "chopped", "cooked"]
+    },
+    {
+        "name": "nori",
+        "states": ["raw"]        
+    },
+    {
+        "name": "rice",
+        "states": ["raw", "cooked"]        
+    },
+    {
+        "name": "fish",
+        "states": ["raw", "chopped"]        
+    },
+    {
+        "name": "shrimp",
+        "states": ["raw", "chopped"]        
+    }
+]

@@ -1,0 +1,63 @@
+[
+    {
+        "name": "sushi_fish",
+        "recipe": "First chop the fish and cook the rice. Then put the chopped fish and cooked rice and a piece of nori on a plate to make a fish sushi.",
+        "ingredients": [
+            {
+                "item": "fish",
+                "state": "chopped"
+            },
+            {
+                "item": "rice",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "nori",
+                "state": "raw"
+            }
+        ]
+    },
+    {
+        "name": "sushi_cucumber",
+        "recipe": "First chop the cucumber and cook the rice. Then put the chopped cucumber and cooked rice and a piece of nori on a plate to make a cucumber sushi.",
+        "ingredients": [
+            {
+                "item": "cucumber",
+                "state": "chopped"
+            },
+            {
+                "item": "rice",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "nori",
+                "state": "raw"
+            }
+        ]
+    },
+    {
+        "name": "sushi_full",
+        "recipe": "First chop the fish and cucumber and cook the rice. Then put the chopped fish, chopped cucumber and cooked rice and a piece of nori on a plate to make a full sushi.",
+        "ingredients": [
+            {
+                "item": "fish",
+                "state": "chopped"
+            },
+            {
+                "item": "cucumber",
+                "state": "chopped"
+            },
+            {
+                "item": "rice",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "nori",
+                "state": "raw"
+            }
+        ]
+    }
+]

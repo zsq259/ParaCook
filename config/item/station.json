@@ -1,0 +1,54 @@
+[
+    {
+        "name": "table",
+        "type": "station"
+    },
+    {
+        "name": "dispenser",
+        "type": "station"
+    },
+    {
+        "name": "chopping_board",
+        "type": "station"
+    },
+    {
+        "name": "stove",
+        "type": "station"
+    },
+    {
+        "name": "plate_return",
+        "type": "station"
+    },
+    {
+        "name": "sink",
+        "type": "station"
+    },
+    {
+        "name": "trash",
+        "type": "station"
+    },
+    {
+        "name": "serving_window",
+        "type": "station"
+    },
+    {
+        "name": "wall",
+        "type": "obstacle"
+    },
+    {
+        "name": "pot",
+        "type": "container"
+    },
+    {
+        "name": "pan",
+        "type": "container"
+    },
+    {
+        "name": "plate",
+        "type": "container"
+    },
+    {
+        "name": "extinguisher",
+        "type": "item"
+    }
+]

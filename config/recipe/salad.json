@@ -1,0 +1,44 @@
+[
+    {
+        "name": "salad_basic",
+        "recipe": "Put chopped lettuce on a plate to make a salad.",
+        "ingredients": [
+            {
+                "item": "lettuce",
+                "state": "chopped"
+            }
+        ]
+    },
+    {
+        "name": "salad_advanced",
+        "recipe": "Put chopped lettuce and chopped tomato together to a plate to make a salad.",
+        "ingredients": [
+            {
+                "item": "lettuce",
+                "state": "chopped"
+            },
+            {
+                "item": "tomato", 
+                "state": "chopped"
+            }
+        ]
+    },
+    {
+        "name": "salad_full",
+        "recipe": "Put chopped lettuce, chopped tomato and chopped cucumber together to a plate to make a salad.",
+        "ingredients": [
+            {
+                "item": "lettuce",
+                "state": "chopped"
+            },
+            {
+                "item": "tomato", 
+                "state": "chopped"
+            },
+            {
+                "item": "cucumber", 
+                "state": "chopped"
+            }
+        ]
+    }
+]

@@ -1,0 +1,62 @@
+[
+    {
+        "name": "burrito_meat",
+        "recipe": "Chop and cook the meat in pan, cook the rice in pot, then put cooked meat and cooked rice together with a raw tortilla to a plate to make a burrito with meat.",
+        "ingredients": [
+            {
+                "item": "tortilla",
+                "state": "raw"
+            },
+            {
+                "item": "rice",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "meat",
+                "state": "cooked",
+                "cookware": "pan"
+            }
+        ]
+    },
+    {
+        "name": "burrito_chicken",
+        "recipe": "Chop and cook the chicken in pan, cook the rice in pot, then put cooked chicken and cooked rice together with a raw tortilla to a plate to make a burrito with chicken.",
+        "ingredients": [
+            {
+                "item": "tortilla",
+                "state": "raw"
+            },
+            {
+                "item": "rice",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "chicken",
+                "state": "cooked",
+                "cookware": "pan"
+            }
+        ]
+    },
+    {
+        "name": "burrito_mushroom",
+        "recipe": "Chop and cook the mushroom in pan, cook the rice in pot, then put cooked mushroom and cooked rice together with a raw tortilla to a plate to make a burrito with mushroom.",
+        "ingredients": [
+            {
+                "item": "tortilla",
+                "state": "raw"
+            },
+            {
+                "item": "rice",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "mushroom",
+                "state": "cooked",
+                "cookware": "pan"
+            }
+        ]
+    }
+]

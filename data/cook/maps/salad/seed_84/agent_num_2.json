@@ -1,0 +1,108 @@
+{
+    "name": "kitchen",
+    "width": 10,
+    "height": 8,
+    "agents": [
+        {
+            "name": "agent1",
+            "x": 1,
+            "y": 5
+        },
+        {
+            "name": "agent2",
+            "x": 3,
+            "y": 6
+        }
+    ],
+    "tiles": [
+        {
+            "x": 8,
+            "y": 7,
+            "type": "station",
+            "name": "dispenser1",
+            "provides": "cucumber"
+        },
+        {
+            "x": 3,
+            "y": 7,
+            "type": "station",
+            "name": "dispenser2",
+            "provides": "tomato"
+        },
+        {
+            "x": 7,
+            "y": 0,
+            "type": "station",
+            "name": "dispenser3",
+            "provides": "lettuce"
+        },
+        {
+            "x": 3,
+            "y": 0,
+            "type": "station",
+            "name": "chopping_board1"
+        },
+        {
+            "x": 9,
+            "y": 4,
+            "type": "station",
+            "name": "chopping_board2"
+        },
+        {
+            "x": 9,
+            "y": 1,
+            "type": "station",
+            "name": "serving_window"
+        },
+        {
+            "x": 6,
+            "y": 7,
+            "type": "station",
+            "name": "sink"
+        },
+        {
+            "x": 9,
+            "y": 2,
+            "type": "station",
+            "name": "plate_return"
+        },
+        {
+            "x": 6,
+            "y": 2,
+            "type": "station",
+            "name": "table1",
+            "item": "plate"
+        },
+        {
+            "x": 2,
+            "y": 6,
+            "type": "station",
+            "name": "table2",
+            "item": "plate"
+        },
+        {
+            "x": 1,
+            "y": 4,
+            "type": "station",
+            "name": "table3"
+        },
+        {
+            "x": 8,
+            "y": 2,
+            "type": "station",
+            "name": "table4"
+        },
+        {
+            "x": 7,
+            "y": 2,
+            "type": "obstacle",
+            "name": "wall"
+        },
+        {
+            "x": 3,
+            "y": 3,
+            "type": "obstacle",
+            "name": "wall"
+        }
+    ]
+}

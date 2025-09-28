@@ -1,0 +1,22 @@
+[
+    {
+        "name": "sashimi_fish",
+        "recipe": "Chop the fish and put the chopped fish to a plate to make sashimi with fish.",
+        "ingredients": [
+            {
+                "item": "fish",
+                "state": "chopped"
+            }
+        ]
+    },
+    {
+        "name": "sashimi_shrimp",
+        "recipe": "Chop the shrimp and put the chopped shrimp to a plate to make sashimi with shrimp.",
+        "ingredients": [
+            {
+                "item": "shrimp",
+                "state": "chopped"
+            }
+        ]
+    }
+]

@@ -1,0 +1,71 @@
+[
+    {
+        "name": "pasta_tomato",
+        "recipe": "Cook the pasta in pot, chop the tomato and cook it in pan, then put cooked pasta and cooked tomato together to a plate to make pasta with tomato pasta.",
+        "ingredients": [
+            {
+                "item": "pasta",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "tomato",
+                "state": "cooked",
+                "cookware": "pan"
+            }
+        ]
+    },
+    {
+        "name": "pasta_meat",
+        "recipe": "Cook the pasta in pot, chop the meat and cook it in pan, then put cooked pasta and cooked meat together to a plate to make pasta with meat sauce.",
+        "ingredients": [
+            {
+                "item": "pasta",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "meat",
+                "state": "cooked",
+                "cookware": "pan"
+            }
+        ]
+    },
+    {
+        "name": "pasta_mushroom",
+        "recipe": "Cook the pasta in pot, chop the mushroom and cook it in pan, then put cooked pasta and cooked mushroom together to a plate to make pasta with mushroom sauce.",
+        "ingredients": [
+            {
+                "item": "pasta",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "mushroom",
+                "state": "cooked",
+                "cookware": "pan"
+            }
+        ]
+    },
+    {
+        "name": "pasta_seafood",
+        "recipe": "Cook the pasta in pot, chop the fish and prawn and cook them in pan respectively, then put cooked pasta, cooked fish and cooked prawn together to a plate to make seafood pasta.",
+        "ingredients": [
+            {
+                "item": "pasta",
+                "state": "cooked",
+                "cookware": "pot"
+            },
+            {
+                "item": "fish",
+                "state": "cooked",
+                "cookware": "pan"
+            },
+            {
+                "item": "prawn",
+                "state": "cooked",
+                "cookware": "pan"
+            }
+        ]
+    }
+]

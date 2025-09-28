@@ -1,0 +1,542 @@
+{
+    "sushi/seed_256/orders_num_1": [
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_256/orders_num_2": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_256/orders_num_3": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_256/orders_num_4": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber",
+        "sushi/sushi_fish"
+    ],
+    "sushi/seed_128/orders_num_1": [
+        "sushi/sushi_full"
+    ],
+    "sushi/seed_128/orders_num_2": [
+        "sushi/sushi_full",
+        "sushi/sushi_fish"
+    ],
+    "sushi/seed_128/orders_num_3": [
+        "sushi/sushi_full",
+        "sushi/sushi_fish",
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_128/orders_num_4": [
+        "sushi/sushi_full",
+        "sushi/sushi_fish",
+        "sushi/sushi_cucumber",
+        "sushi/sushi_fish"
+    ],
+    "sushi/seed_126/orders_num_1": [
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_126/orders_num_2": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_126/orders_num_3": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_126/orders_num_4": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber",
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_84/orders_num_1": [
+        "sushi/sushi_full"
+    ],
+    "sushi/seed_84/orders_num_2": [
+        "sushi/sushi_full",
+        "sushi/sushi_full"
+    ],
+    "sushi/seed_84/orders_num_3": [
+        "sushi/sushi_full",
+        "sushi/sushi_full",
+        "sushi/sushi_fish"
+    ],
+    "sushi/seed_84/orders_num_4": [
+        "sushi/sushi_full",
+        "sushi/sushi_full",
+        "sushi/sushi_fish",
+        "sushi/sushi_fish"
+    ],
+    "sushi/seed_42/orders_num_1": [
+        "sushi/sushi_cucumber"
+    ],
+    "sushi/seed_42/orders_num_2": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_fish"
+    ],
+    "sushi/seed_42/orders_num_3": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_fish",
+        "sushi/sushi_fish"
+    ],
+    "sushi/seed_42/orders_num_4": [
+        "sushi/sushi_cucumber",
+        "sushi/sushi_fish",
+        "sushi/sushi_fish",
+        "sushi/sushi_fish"
+    ],
+    "pasta/seed_256/orders_num_1": [
+        "pasta/pasta_meat"
+    ],
+    "pasta/seed_256/orders_num_2": [
+        "pasta/pasta_meat",
+        "pasta/pasta_meat"
+    ],
+    "pasta/seed_256/orders_num_3": [
+        "pasta/pasta_meat",
+        "pasta/pasta_meat",
+        "pasta/pasta_meat"
+    ],
+    "pasta/seed_256/orders_num_4": [
+        "pasta/pasta_meat",
+        "pasta/pasta_meat",
+        "pasta/pasta_meat",
+        "pasta/pasta_tomato"
+    ],
+    "pasta/seed_128/orders_num_1": [
+        "pasta/pasta_seafood"
+    ],
+    "pasta/seed_128/orders_num_2": [
+        "pasta/pasta_seafood",
+        "pasta/pasta_tomato"
+    ],
+    "pasta/seed_128/orders_num_3": [
+        "pasta/pasta_seafood",
+        "pasta/pasta_tomato",
+        "pasta/pasta_mushroom"
+    ],
+    "pasta/seed_128/orders_num_4": [
+        "pasta/pasta_seafood",
+        "pasta/pasta_tomato",
+        "pasta/pasta_mushroom",
+        "pasta/pasta_tomato"
+    ],
+    "pasta/seed_126/orders_num_1": [
+        "pasta/pasta_mushroom"
+    ],
+    "pasta/seed_126/orders_num_2": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_mushroom"
+    ],
+    "pasta/seed_126/orders_num_3": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_mushroom",
+        "pasta/pasta_meat"
+    ],
+    "pasta/seed_126/orders_num_4": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_mushroom",
+        "pasta/pasta_meat",
+        "pasta/pasta_mushroom"
+    ],
+    "pasta/seed_84/orders_num_1": [
+        "pasta/pasta_mushroom"
+    ],
+    "pasta/seed_84/orders_num_2": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_seafood"
+    ],
+    "pasta/seed_84/orders_num_3": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_seafood",
+        "pasta/pasta_tomato"
+    ],
+    "pasta/seed_84/orders_num_4": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_seafood",
+        "pasta/pasta_tomato",
+        "pasta/pasta_tomato"
+    ],
+    "pasta/seed_42/orders_num_1": [
+        "pasta/pasta_mushroom"
+    ],
+    "pasta/seed_42/orders_num_2": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_tomato"
+    ],
+    "pasta/seed_42/orders_num_3": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_tomato",
+        "pasta/pasta_meat"
+    ],
+    "pasta/seed_42/orders_num_4": [
+        "pasta/pasta_mushroom",
+        "pasta/pasta_tomato",
+        "pasta/pasta_meat",
+        "pasta/pasta_tomato"
+    ],
+    "salad/seed_256/orders_num_1": [
+        "salad/salad_advanced"
+    ],
+    "salad/seed_256/orders_num_2": [
+        "salad/salad_advanced",
+        "salad/salad_advanced"
+    ],
+    "salad/seed_256/orders_num_3": [
+        "salad/salad_advanced",
+        "salad/salad_advanced",
+        "salad/salad_advanced"
+    ],
+    "salad/seed_256/orders_num_4": [
+        "salad/salad_advanced",
+        "salad/salad_advanced",
+        "salad/salad_advanced",
+        "salad/salad_basic"
+    ],
+    "salad/seed_128/orders_num_1": [
+        "salad/salad_full"
+    ],
+    "salad/seed_128/orders_num_2": [
+        "salad/salad_full",
+        "salad/salad_basic"
+    ],
+    "salad/seed_128/orders_num_3": [
+        "salad/salad_full",
+        "salad/salad_basic",
+        "salad/salad_advanced"
+    ],
+    "salad/seed_128/orders_num_4": [
+        "salad/salad_full",
+        "salad/salad_basic",
+        "salad/salad_advanced",
+        "salad/salad_basic"
+    ],
+    "salad/seed_126/orders_num_1": [
+        "salad/salad_advanced"
+    ],
+    "salad/seed_126/orders_num_2": [
+        "salad/salad_advanced",
+        "salad/salad_advanced"
+    ],
+    "salad/seed_126/orders_num_3": [
+        "salad/salad_advanced",
+        "salad/salad_advanced",
+        "salad/salad_advanced"
+    ],
+    "salad/seed_126/orders_num_4": [
+        "salad/salad_advanced",
+        "salad/salad_advanced",
+        "salad/salad_advanced",
+        "salad/salad_advanced"
+    ],
+    "salad/seed_84/orders_num_1": [
+        "salad/salad_full"
+    ],
+    "salad/seed_84/orders_num_2": [
+        "salad/salad_full",
+        "salad/salad_full"
+    ],
+    "salad/seed_84/orders_num_3": [
+        "salad/salad_full",
+        "salad/salad_full",
+        "salad/salad_basic"
+    ],
+    "salad/seed_84/orders_num_4": [
+        "salad/salad_full",
+        "salad/salad_full",
+        "salad/salad_basic",
+        "salad/salad_basic"
+    ],
+    "salad/seed_42/orders_num_1": [
+        "salad/salad_advanced"
+    ],
+    "salad/seed_42/orders_num_2": [
+        "salad/salad_advanced",
+        "salad/salad_basic"
+    ],
+    "salad/seed_42/orders_num_3": [
+        "salad/salad_advanced",
+        "salad/salad_basic",
+        "salad/salad_basic"
+    ],
+    "salad/seed_42/orders_num_4": [
+        "salad/salad_advanced",
+        "salad/salad_basic",
+        "salad/salad_basic",
+        "salad/salad_basic"
+    ],
+    "burger/seed_256/orders_num_1": [
+        "burger/burger_full"
+    ],
+    "burger/seed_256/orders_num_2": [
+        "burger/burger_full",
+        "burger/burger_full"
+    ],
+    "burger/seed_256/orders_num_3": [
+        "burger/burger_full",
+        "burger/burger_full",
+        "burger/burger_lettuce"
+    ],
+    "burger/seed_256/orders_num_4": [
+        "burger/burger_full",
+        "burger/burger_full",
+        "burger/burger_lettuce",
+        "burger/burger_basic"
+    ],
+    "burger/seed_128/orders_num_1": [
+        "burger/burger_cheese_lettuce"
+    ],
+    "burger/seed_128/orders_num_2": [
+        "burger/burger_cheese_lettuce",
+        "burger/burger_lettuce"
+    ],
+    "burger/seed_128/orders_num_3": [
+        "burger/burger_cheese_lettuce",
+        "burger/burger_lettuce",
+        "burger/burger_full"
+    ],
+    "burger/seed_128/orders_num_4": [
+        "burger/burger_cheese_lettuce",
+        "burger/burger_lettuce",
+        "burger/burger_full",
+        "burger/burger_basic"
+    ],
+    "burger/seed_126/orders_num_1": [
+        "burger/burger_full"
+    ],
+    "burger/seed_126/orders_num_2": [
+        "burger/burger_full",
+        "burger/burger_full"
+    ],
+    "burger/seed_126/orders_num_3": [
+        "burger/burger_full",
+        "burger/burger_full",
+        "burger/burger_full"
+    ],
+    "burger/seed_126/orders_num_4": [
+        "burger/burger_full",
+        "burger/burger_full",
+        "burger/burger_full",
+        "burger/burger_cheese"
+    ],
+    "burger/seed_84/orders_num_1": [
+        "burger/burger_cheese"
+    ],
+    "burger/seed_84/orders_num_2": [
+        "burger/burger_cheese",
+        "burger/burger_cheese_lettuce"
+    ],
+    "burger/seed_84/orders_num_3": [
+        "burger/burger_cheese",
+        "burger/burger_cheese_lettuce",
+        "burger/burger_basic"
+    ],
+    "burger/seed_84/orders_num_4": [
+        "burger/burger_cheese",
+        "burger/burger_cheese_lettuce",
+        "burger/burger_basic",
+        "burger/burger_basic"
+    ],
+    "burger/seed_42/orders_num_1": [
+        "burger/burger_cheese"
+    ],
+    "burger/seed_42/orders_num_2": [
+        "burger/burger_cheese",
+        "burger/burger_basic"
+    ],
+    "burger/seed_42/orders_num_3": [
+        "burger/burger_cheese",
+        "burger/burger_basic",
+        "burger/burger_lettuce"
+    ],
+    "burger/seed_42/orders_num_4": [
+        "burger/burger_cheese",
+        "burger/burger_basic",
+        "burger/burger_lettuce",
+        "burger/burger_lettuce"
+    ],
+    "burrito/seed_256/orders_num_1": [
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_256/orders_num_2": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_256/orders_num_3": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_256/orders_num_4": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken",
+        "burrito/burrito_meat"
+    ],
+    "burrito/seed_128/orders_num_1": [
+        "burrito/burrito_mushroom"
+    ],
+    "burrito/seed_128/orders_num_2": [
+        "burrito/burrito_mushroom",
+        "burrito/burrito_meat"
+    ],
+    "burrito/seed_128/orders_num_3": [
+        "burrito/burrito_mushroom",
+        "burrito/burrito_meat",
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_128/orders_num_4": [
+        "burrito/burrito_mushroom",
+        "burrito/burrito_meat",
+        "burrito/burrito_chicken",
+        "burrito/burrito_meat"
+    ],
+    "burrito/seed_126/orders_num_1": [
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_126/orders_num_2": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_126/orders_num_3": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_126/orders_num_4": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken",
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_84/orders_num_1": [
+        "burrito/burrito_mushroom"
+    ],
+    "burrito/seed_84/orders_num_2": [
+        "burrito/burrito_mushroom",
+        "burrito/burrito_mushroom"
+    ],
+    "burrito/seed_84/orders_num_3": [
+        "burrito/burrito_mushroom",
+        "burrito/burrito_mushroom",
+        "burrito/burrito_meat"
+    ],
+    "burrito/seed_84/orders_num_4": [
+        "burrito/burrito_mushroom",
+        "burrito/burrito_mushroom",
+        "burrito/burrito_meat",
+        "burrito/burrito_meat"
+    ],
+    "burrito/seed_42/orders_num_1": [
+        "burrito/burrito_chicken"
+    ],
+    "burrito/seed_42/orders_num_2": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_meat"
+    ],
+    "burrito/seed_42/orders_num_3": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_meat",
+        "burrito/burrito_meat"
+    ],
+    "burrito/seed_42/orders_num_4": [
+        "burrito/burrito_chicken",
+        "burrito/burrito_meat",
+        "burrito/burrito_meat",
+        "burrito/burrito_meat"
+    ],
+    "sashimi/seed_256/orders_num_1": [
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_256/orders_num_2": [
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_256/orders_num_3": [
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_256/orders_num_4": [
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_128/orders_num_1": [
+        "sashimi/sashimi_shrimp"
+    ],
+    "sashimi/seed_128/orders_num_2": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_128/orders_num_3": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_shrimp"
+    ],
+    "sashimi/seed_128/orders_num_4": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_126/orders_num_1": [
+        "sashimi/sashimi_shrimp"
+    ],
+    "sashimi/seed_126/orders_num_2": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_shrimp"
+    ],
+    "sashimi/seed_126/orders_num_3": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_126/orders_num_4": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_shrimp"
+    ],
+    "sashimi/seed_84/orders_num_1": [
+        "sashimi/sashimi_shrimp"
+    ],
+    "sashimi/seed_84/orders_num_2": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_shrimp"
+    ],
+    "sashimi/seed_84/orders_num_3": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_84/orders_num_4": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_42/orders_num_1": [
+        "sashimi/sashimi_shrimp"
+    ],
+    "sashimi/seed_42/orders_num_2": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_42/orders_num_3": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish"
+    ],
+    "sashimi/seed_42/orders_num_4": [
+        "sashimi/sashimi_shrimp",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish",
+        "sashimi/sashimi_fish"
+    ]
+}
