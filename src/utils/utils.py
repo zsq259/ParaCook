@@ -2,15 +2,12 @@ import re
 import json
 
 def get_model(model_name):
-    if "llama" in model_name.lower():
-        from src.agent.model.llama_wrapper import LlamaWrapper
-        return LlamaWrapper(model_name)
-    elif "qwen" in model_name.lower():
-        from src.agent.model.qwen_wrapper import QwenWrapper
-        return QwenWrapper(model_name)
-    elif "gemini" in model_name.lower():
+    if "gemini" in model_name.lower():
         from src.agent.model.gemini_wrapper import GeminiWrapper
         return GeminiWrapper(name=model_name)
+    elif "deepseek" in model_name.lower():
+        from src.agent.model.deepseek_wrapper import DeepSeekWrapper
+        return DeepSeekWrapper(name=model_name)
     # elif "claude" in model_name.lower():
     #     from src.agent.model.claude_wrapper import ClaudeWrapper
     #     return ClaudeWrapper(name=model_name)
