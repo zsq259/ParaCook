@@ -32,6 +32,17 @@ class Simulator:
             time0.agents.append(agent_name)
         self.event_queue.append(time0)
 
+    def reset_plan(self, plan: Dict[str, List[Dict]]):
+        """Reset the plan of all agents"""
+        for agent_name, action_list in plan.items():
+            if agent_name in self.world.agents:
+                agent = self.world.agents[agent_name]
+                if not isinstance(action_list, list):
+                    raise ValueError(f"Action plan for Agent {agent_name} is not a list")
+                agent.reset_actions(action_list)
+            else:
+                raise ValueError(f"Agent {agent_name} does not exist in the world")
+
     def load_plan(self, plan: Dict[str, List[Dict]]):
         """Load action plans for all agents"""
         for agent_name, action_list in plan.items():
@@ -78,7 +89,7 @@ class Simulator:
                         return PROCESS_POT_COOK_TIME
                     elif isinstance(station.item, Pan):
                         return PROCESS_PAN_COOK_TIME
-                raise ActionExecutionError(f"Agent {agent_name} tried to process on empty stove")
+                raise ActionExecutionError(f"Agent {agent_name} tried to process on empty stove without any cookware on it")
             elif isinstance(station, Sink):
                 return PROCESS_WASH_PLATE_TIME
             else:
@@ -153,6 +164,8 @@ class Simulator:
                 station.release()
             elif action["action"] == "Wait":
                 pass
+            elif action["action"] == "Finish":
+                agent.all_finished = True
         except ActionExecutionError as e:
             raise ActionExecutionError(f"Agent {agent_name} encountered an error while executing action {action}: {e}")
 
@@ -211,12 +224,14 @@ class Simulator:
             agent = self.world.agents[agent_name]
             try:
                 if current_time_point.time:
-                    have_agent_finished = True
+                    # have_agent_finished = True
                     self.complete_current_action(agent_name)
                 self.assign_next_action(agent_name)
                 while agent.finish_time == self.current_time and not agent.is_idle:
                     self.complete_current_action(agent_name)
                     self.assign_next_action(agent_name)
+                if not agent.all_finished and len(agent.action_queue) == 0 and agent.is_idle:
+                    have_agent_finished = True
             except ActionExecutionError as e:
                 # Return error information
                 if agent.current_action:
@@ -244,6 +259,13 @@ class Simulator:
                 status += f"Agent {agent_name}: vacant (remaining actions: {len(agent.action_queue)})\n"
             else:
                 if agent.current_action:
-                    status += f"Agent {agent_name}: executing {agent.current_action} "f"(finish at: {agent.finish_time}, remaining actions: {len(agent.action_queue)})\n"
-        
+                    status += f"Agent {agent_name}: executing {agent.current_action}, finish at: {agent.finish_time}, remaining actions: "
+                    for act in agent.action_queue:
+                        status += f"{act}, "
+                    status = status.rstrip(", ") + "\n"
+                else:
+                    # raise ValueError(f"Agent {agent_name} is not idle but has no current action")
+                    logger.warning(f"{COLOR_CODES['YELLOW']}Agent {agent_name} is not idle but has no current action{RESET}")
+                    exit(1)
+
         return status

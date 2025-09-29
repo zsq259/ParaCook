@@ -68,9 +68,10 @@ if __name__ == "__main__":
     # print("total movements:", result["all_movements"])
     # print("total waiting time:", result["all_waiting_time"])
     results = []
-    # models = ["gpt-5", "gemini-2.5-pro"]
-    models = ["claude-opus-4-1-20250805"]
-    methods = ["IO", "CoT"]
+    models = ["gpt-5", "gemini-2.5-pro"]
+    # models = ["claude-opus-4-1-20250805"]
+    # methods = ["IO", "CoT"]
+    methods = ["MultiStepReAct"]
     recipes = ["sashimi", "salad", "sushi", "burger", "pasta", "burrito"]
     for model in models:
         for method in methods:

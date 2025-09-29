@@ -33,9 +33,10 @@ class IOAgent(Agent):
 
         self.chat_history = messages.copy()
 
-    def run_test(self, world: World, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
+    def run_test(self, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
         """Run test with the given world and simulator, using the provided examples for context."""
         self.initiate_chat(examples)
+        world = simulator.world
         prompt = f"Map JSON:\n{json.dumps(world.map_data)}\n\nRecipes:\n{recipes}\n\nOrders:\n{str(world.orders)}"
         plan = self.get_actions(prompt)
         logger.info(f"{COLOR_CODES['BLUE']}final plan: {plan}{RESET}")

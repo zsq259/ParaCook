@@ -162,6 +162,48 @@ class FixedAgent(Agent):
         elif orders == ["sushi_fish"] and map_name == "kitchen_sushi_8x6":
             return {
                 "agent1": [
+                    {"action": "MoveTo", "target": [1, 1]},
+                    {"action": "Interact", "target": "dispenser1"},
+                    {"action": "MoveTo", "target": [5, 1]},
+                    {"action": "Interact", "target": "chopping_board1"},
+                    {"action": "Process", "target": "chopping_board1"},
+                    {"action": "Interact", "target": "chopping_board1"},
+                    {"action": "MoveTo", "target": [6, 4]},
+                    {"action": "Interact", "target": "table3"},
+                    {"action": "MoveTo", "target": [4, 1]},
+                    {"action": "Interact", "target": "dispenser4"},
+                    {"action": "MoveTo", "target": [6, 4]},
+                    {"action": "Interact", "target": "table3"},
+                    {"action": "Finish"}
+                ],
+                "agent2": [
+                    {"action": "MoveTo", "target": [5, 4]},
+                    {"action": "Interact", "target": "stove"},
+                    {"action": "MoveTo", "target": [6, 4]},
+                    {"action": "Interact", "target": "table3"},
+                    {"action": "MoveTo", "target": [3, 1]},
+                    {"action": "Interact", "target": "dispenser3"},
+                    {"action": "MoveTo", "target": [6, 4]},
+                    {"action": "Interact", "target": "table3"},
+                    {"action": "Interact", "target": "table3"},
+                    {"action": "MoveTo", "target": [5, 4]},
+                    {"action": "Interact", "target": "stove"},
+                    {"action": "MoveTo", "target": [3, 4]},
+                    {"action": "Interact", "target": "table1"},
+                    {"action": "MoveTo", "target": [6, 4]},
+                    {"action": "Interact", "target": "table3"},
+                    {"action": "Wait", "duration": 5},
+                    {"action": "Interact", "target": "table3"},
+                    {"action": "Wait", "duration": 6},
+                    {"action": "MoveTo", "target": [5, 4]},
+                    {"action": "Interact", "target": "stove"},
+                    {"action": "MoveTo", "target": [4, 4]},
+                    {"action": "Interact", "target": "serving_window"},
+                    {"action": "Finish"}
+                ]
+            }
+            {
+                "agent1": [
                     # 任务：获取鱼并切碎
                     {"action": "MoveTo", "target": [1, 1]},         # 移动到鱼分配器旁边，耗时3，当前时间3
                     {"action": "Interact", "target": "dispenser1"}, # 从分配器获取鱼，耗时0，当前时间3
@@ -194,9 +236,10 @@ class FixedAgent(Agent):
         else:
             raise ValueError(f"未知订单: {orders}")
     
-    def run_test(self, world: World, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
+    def run_test(self, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
+        world = simulator.world
         plan = self.get_actions(world.orders, world.map_data["name"])
         logger.info(f"{COLOR_CODES['YELLOW']}Fixed plan: {plan}{RESET}")
         simulator.load_plan(plan)
         simulator.run_simulation()
-        return {}
+        return self.create_result(simulator, 0)

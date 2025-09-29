@@ -28,12 +28,13 @@ class ReActAgent(Agent):
         ]
         self.chat_history = messages.copy()
 
-    def run_test(self, world: World, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
-
+    def run_test(self, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
         self.initiate_chat(examples)
+
+        world = simulator.world
         prompt = f"Map JSON:\n{json.dumps(world.map_data)}\n\nRecipes:\n{recipes}\n\nOrders:\n{str(world.orders)}"
         plan = self.get_actions(prompt)
-        logger.info(f"{COLOR_CODES['BLUE']}initial plan: {plan}{RESET}")
+        logger.info(f"{COLOR_CODES['BLUE']}initial plan: {json.dumps(plan, indent=2)}{RESET}")
 
         finished_agents = set()
         simulator.load_plan(plan)
@@ -46,12 +47,14 @@ class ReActAgent(Agent):
         while len(finished_agents) < len(simulator.world.agents):
             count = 0
             simulator_copy = deepcopy(simulator)
-            world_copy = deepcopy(world)
+            print("Fuck=================================================================")
             while count < retries:
-                simulator = deepcopy(simulator_copy)
-                world = deepcopy(world_copy)
                 try:
-                    have_agent_finished = simulator.step()
+                    have_agent_finished = False
+                    while not have_agent_finished:
+                        have_agent_finished = simulator.step()
+                        if len(world.orders) == 0:
+                            break
                     while have_agent_finished:
                         have_agent_finished = False
                         agent_state = simulator.status()
@@ -66,15 +69,17 @@ class ReActAgent(Agent):
                             for agent in simulator.world.agents.values():
                                 if agent.name == agent_name:
                                     if next_action and len(next_action) > 0 and next_action[0].get("action") == "Finish":
+                                        agent.all_finished = True
                                         finished_agents.add(agent_name)
                                     else:
                                         agent.load_actions(next_action)
                                         simulator.assign_next_action(agent_name)
-                                        if agent.finish_time == simulator.current_time and not agent.is_idle:
-                                            have_agent_finished = True
+                                        while agent.finish_time == simulator.current_time and not agent.is_idle:
                                             simulator.complete_current_action(agent_name)
-                                        else:
-                                            simulator.update_event_queue()
+                                            simulator.assign_next_action(agent_name)
+                                        if not agent.all_finished and len(agent.action_queue) == 0 and agent.is_idle:
+                                            have_agent_finished = True
+                        simulator.update_event_queue()
                     break
                 except Exception as e:
                     logger.error(f"{COLOR_CODES['RED']}Simulation error on attempt {count+1}: {e}{RESET}")
@@ -84,7 +89,14 @@ class ReActAgent(Agent):
                         return self.create_result(simulator, count_max, error_msg=str(e))
                     prompt = self.REFINE_INSTRUCTION.format(error=str(e), world_json=simulator.world.to_json())
                     plan = self.get_actions(prompt)
-                    logger.info(f"{COLOR_CODES['BLUE']}plan after refinement: {plan}{RESET}")
+                    logger.info(f"{COLOR_CODES['BLUE']}plan after refinement: {json.dumps(plan, indent=2)}{RESET}")
+                    simulator = deepcopy(simulator_copy)
+                    world = simulator.world
+                    simulator.reset_plan(plan)
+
+            print("==================================== ", len(world.orders))
             
-                    
+            if len(world.orders) == 0:
+                break
+
         return self.create_result(simulator, count_max)

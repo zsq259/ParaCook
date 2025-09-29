@@ -51,6 +51,7 @@ This is the most important section. All rules must be strictly followed.
 - Agents can only interact or process with workstations that are adjacent in the four cardinal directions (up, down, left, right).
 **Environment & Item Rules**
 - Station Exclusivity: Fixed stations like cutting boards or sinks can only be used by one agent at a time for a Process action.
+- Ingredient Dispensing: Ingredients can only be obtained from designated dispensers. Each dispenser provides a specific type of ingredient. All types of ingredients can be directly held without the need for additional containers.
 - Cooking Process:
   - Stoves can only hold cookware (pots/pans), not ingredients directly.
   - Cooking starts automatically once cookware is placed on a stove and contains ingredients. Picking it up pauses cooking; placing it back on any stove resumes it.
@@ -87,7 +88,7 @@ This is the most important section. All rules must be strictly followed.
       - If both are containers: The contents of the held container are transferred to the plate. Both containers remain in their original positions. For example, if holding a pot with rice and interacting with a table with a plate, the rice will be placed into the plate, the pot remains in hand, and the plate remains on the table.
     - Note: Ingredients already in a plate cannot be moved out; they can only be added to an another plate or discarded to trash.
   - With an Ingredient Dispenser: 
-    - If empty-handed and the top is free, take a raw ingredient from the box.
+    - If empty-handed and the top is free, take a raw ingredient from the box. Ingredients can only be taken when empty-handed and there is no item on top of the dispenser.
     - If holding an item (ingredient or container), agent will put the item down on the top of the dispenser if it's free.
     - Otherwise, follow the same rules as with regular counters.
   - With a Stove:
@@ -111,6 +112,9 @@ This is the most important section. All rules must be strictly followed.
 - **Wait(duration)**:
   - format: `{{"action": "Wait", "duration": t}}`
   - Remain idle at the current position for t time units.
+- **Finish()**:
+  - format: `{{"action": "Finish"}}`
+  - Indicates the agent has completed all its tasks and will take no further actions.
 
 ## 6. Suggestions
 - Tasks must be reasonably allocated to achieve multi-agent parallel collaboration and minimize total time consumption.

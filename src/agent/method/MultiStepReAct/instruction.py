@@ -13,7 +13,8 @@ Your planning must always be guided by these three principles:
 - **Orders**: Describe the dishes that need to be completed in order.
 
 ## 3. Output Requirements
-- For each agent, thought about the environment and output only a sequence of one or more actions (the number of actions is decided by yourself), then wait for the next observation, and repeat this process until all orders are completed.
+- For each agent, thought about the environment and output a sequence of one or more actions (the number of actions is decided by yourself), then wait for the next observation, and repeat this process until all orders are completed.
+- **DO NOT** try to plan the entire workflow from start to finish in one turn
 - Each action is a dictionary containing action type and parameters. Detailed action definitions are provided in Section 5.
 Please think step by step and first explain your reasoning process in detail using natural language, including task allocation, key operation sequences, collaboration details, and time arrangement. After the reasoning, output the standard JSON format action without any additional explanations or content.
 
@@ -51,6 +52,7 @@ This is the most important section. All rules must be strictly followed.
 - Agents can only interact or process with workstations that are adjacent in the four cardinal directions (up, down, left, right).
 **Environment & Item Rules**
 - Station Exclusivity: Fixed stations like cutting boards or sinks can only be used by one agent at a time for a Process action.
+- Ingredient Dispensing: Ingredients can only be obtained from designated dispensers. Each dispenser provides a specific type of ingredient. All types of ingredients can be directly held without the need for additional containers.
 - Cooking Process:
   - Stoves can only hold cookware (pots/pans), not ingredients directly.
   - Cooking starts automatically once cookware is placed on a stove and contains ingredients. Picking it up pauses cooking; placing it back on any stove resumes it.
@@ -87,7 +89,7 @@ This is the most important section. All rules must be strictly followed.
       - If both are containers: The contents of the held container are transferred to the plate. Both containers remain in their original positions. For example, if holding a pot with rice and interacting with a table with a plate, the rice will be placed into the plate, the pot remains in hand, and the plate remains on the table.
     - Note: Ingredients already in a plate cannot be moved out; they can only be added to an another plate or discarded to trash.
   - With an Ingredient Dispenser: 
-    - If empty-handed and the top is free, take a raw ingredient from the box.
+    - If empty-handed and the top is free, take a raw ingredient from the box. Ingredients can only be taken when empty-handed and there is no item on top of the dispenser.
     - If holding an item (ingredient or container), agent will put the item down on the top of the dispenser if it's free.
     - Otherwise, follow the same rules as with regular counters.
   - With a Stove:
@@ -119,7 +121,8 @@ This is the most important section. All rules must be strictly followed.
 - Tasks must be reasonably allocated to achieve multi-agent parallel collaboration and minimize total time consumption.
 - Action sequence must completely cover the entire process from raw material acquisition, processing, assembly to serving.
 - Always notice the timepoint when each action starts and ends to ensure no conflicts in agent actions and get the most efficient plan.
-- You can flexibly decide how many actions to output for each agent in each turn, according to the current situation and planning needs
+- You can flexibly decide how many actions to output for each agent in each turn, according to the current situation and planning needs. 
+- Do not output too many actions at once if you are not sure about the future situation. You can output less actions and wait for the next observation to adjust your plan.
 
 Please combine the map layout and recipe workflow to reasonably arrange each operation step and collaboration details, outputting standard actions.
 
@@ -145,19 +148,14 @@ Map JSON:
         {{"x": 5, "y": 0, "type": "station", "name": "table1", "item": "plate"}},
         {{"x": 6, "y": 0, "type": "station", "name": "serving_window"}},
         {{"x": 7, "y": 0, "type": "obstacle", "name": "wall"}},
-
         {{"x": 0, "y": 1, "type": "obstacle", "name": "wall"}},
         {{"x": 7, "y": 1, "type": "obstacle", "name": "wall"}},
-
         {{"x": 0, "y": 2, "type": "obstacle", "name": "wall"}},
         {{"x": 7, "y": 2, "type": "obstacle", "name": "wall"}},
-
         {{"x": 0, "y": 3, "type": "obstacle", "name": "wall"}},
         {{"x": 7, "y": 3, "type": "obstacle", "name": "wall"}},
-
         {{"x": 0, "y": 4, "type": "obstacle", "name": "wall"}},
         {{"x": 7, "y": 4, "type": "obstacle", "name": "wall"}},
-
         {{"x": 0, "y": 5, "type": "obstacle", "name": "wall"}},
         {{"x": 1, "y": 5, "type": "station", "name": "sink"}},
         {{"x": 2, "y": 5, "type": "station", "name": "plate_return"}},
@@ -280,16 +278,16 @@ Current World State:
 Model Output:
 ```json
 {{
-    "reasoning": "Current time is 13. Agent1 is holding a plate containing chopped lettuce at (4,1). Agent2 has finished processing the tomato and is empty-handed at (4,1). To complete the salad_advanced order, agent1 needs to combine the chopped tomato with the plate containing lettuce and then deliver the completed dish to the serving_window. According to the Interact rules, when interacting with a table that holds an ingredient while holding a plate, the ingredient is added to the plate without moving the plate. Therefore, agent1 only need to Interact with chopping_board2 and can derectly add the chopped tomato to the plate. Then, agent1 should MoveTo (6,1), adjacent to the serving_window, and Interact with the serving_window to submit the completed salad. Agent2 has no further tasks and can Finish. This plan ensures that the order is completed efficiently and follows all environment and interaction rules.",
+    "reasoning": "Current time is 13. Agent1 is holding a plate containing chopped lettuce at (4,1). Agent2 has finished processing the tomato and is empty-handed at (4,1). To complete the salad_advanced order, agent1 needs to combine the chopped tomato with the plate containing lettuce and then deliver the completed dish to the serving_window. According to the Interact rules, when interacting with a table that holds an ingredient while holding a plate, the ingredient is added to the plate without moving the plate. Therefore, agent1 only need to Interact with chopping_board2 and can derectly add the chopped tomato to the plate. Then, agent1 should MoveTo (6,1), adjacent to the serving_window, and Interact with the serving_window to submit the completed salad. Finally, agent1 can finish. Agent2 has no further tasks and can directly Finish. This plan ensures that the order is completed efficiently and follows all environment and interaction rules.",
     "plan": {{
         "agent1": [
-          {"action": "Interact", "target": "chopping_board2"},
-          {"action": "MoveTo", "target": [6, 1]},
-          {"action": "Interact", "target": "serving_window"},
-          {"action": "Finish"}
+          {{"action": "Interact", "target": "chopping_board2"}},
+          {{"action": "MoveTo", "target": [6, 1]}},
+          {{"action": "Interact", "target": "serving_window"}},
+          {{"action": "Finish"}}
         ],
         "agent2": [
-          {"action": "Finish"}
+          {{"action": "Finish"}}
         ],
     }}
 }}
@@ -301,6 +299,8 @@ Your previous action plan occurred an error during simulation: {error}.
 Here is the world state when the error occurred:
 {world_json}
 Please think step by step and first analyze the error, then refine your previous action plan to avoid this error while still following all the rules and constraints.
+You can adjust the number of actions you output for each agent in this turn according to the current situation and planning needs. Do not output too many actions at once if you are meeting errors.
+The current plan should be a correction to the plan you provided last time, based on the previous observation, rather than the world state at the time of the error.
 Remember to strictly check all actions in your previous plan to ensure they are all valid and prevent similar errors from happening again.
 Output format:
 

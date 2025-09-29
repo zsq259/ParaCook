@@ -59,5 +59,4 @@ class Agent:
             "error": error_msg,
             "retry_count": retry_count,
             "plan": { name: agent.all_actions for (name, agent) in simulator.world.agents.items() } if plan is None else plan
-
         }

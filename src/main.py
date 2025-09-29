@@ -10,6 +10,7 @@ from src.utils.utils import get_model
 from src.agent.method.IO.IO import IOAgent
 from src.agent.method.CoT.CoT import CoTAgent
 from src.agent.method.ReAct.ReAct import ReActAgent
+from src.agent.method.MultiStepReAct.MultiStepReAct import MultiStepReActAgent
 from src.agent.method.Fixed.Fixed import FixedAgent
 from src.utils.logger_config import logger, COLOR_CODES, RESET
 
@@ -17,6 +18,7 @@ name_to_agent = {
     "IO": IOAgent,
     "CoT": CoTAgent,
     "ReAct": ReActAgent,
+    "MultiStepReAct": MultiStepReActAgent,
     "Fixed": FixedAgent
 }
 
@@ -29,7 +31,7 @@ def run_test(args):
     if not args.result_path:
         result_path = None
     else:
-        if os.path.exists(result_path):
+        if os.path.exists(result_path) and args.result_path != "tmp":
             data = load_data(result_path)
             logger.info(data.get("time", 0))
             if data.get("time", 0) > 0:
@@ -61,7 +63,7 @@ def run_test(args):
     # --- 3. 初始化Agent并运行测试 ---
     model = get_model(args.model)
     agent = name_to_agent[args.agent](model)
-    result = agent.run_test(world, simulator, recipes, args.examples if args.examples else [])
+    result = agent.run_test(simulator, recipes, args.examples if args.examples else [])
     
     logger.info(f"{COLOR_CODES['GREEN']}Results saved to: {result_path}{RESET}")
     if result_path:
@@ -80,7 +82,6 @@ def parse_arguments():
     parser.add_argument('--model', '-m', required=True, 
                        help='使用的模型 (例如: gpt-4o, gemini-2.5-pro)')
     parser.add_argument('--agent', '-a', required=True, 
-                       choices=['IO', 'CoT', 'ReAct', 'Fixed'],
                        help='使用的智能体方法')
     
     # 可选参数，设置默认值
@@ -102,12 +103,13 @@ def parse_arguments():
                        help='配置文件路径 (如果指定，会与命令行参数合并)')
     
     # 结果路径
-    parser.add_argument('--result-path', '-r',
+    parser.add_argument('--result-path', '-r', default='tmp',
                        help='结果文件路径 必须指定')
     
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_arguments()
+    logger.info(f"Running test: model={args.model}, method={args.agent}, map={args.map}, orders={args.orders}, result_path={args.result_path}")
     
     run_test(args)

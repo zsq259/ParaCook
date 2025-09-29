@@ -2,7 +2,7 @@
 
 from ast import In
 from typing import List, Dict, Optional, Tuple
-from venv import logger
+from src.utils.logger_config import logger, COLOR_CODES, RESET
 from src.game.const import *
 
 class GameObject:
@@ -82,8 +82,6 @@ class Plate(Container):
         recipe_signatures = sorted([f"{req['item']}:{req['state']}" for req in recipe_ingredients])
 
         logger.info(f"Checking recipe {recipe['name']}: contents {contents_signatures} vs recipe {recipe_signatures}")
-
-
         return contents_signatures == recipe_signatures
     
 class DirtyPlate(Item):
@@ -415,7 +413,7 @@ class ServingWindow(Station):
                 world.finished_orders.append(order)
                 world.orders.pop(0)
                 if len(world.orders) == 0:
-                    logger.info("{COLOR_CODES['GREEN']}All orders are completed!{RESET}")
+                    logger.info(f"{COLOR_CODES['GREEN']}All orders are completed!{RESET}")
                 return True
         raise ValueError(f"The dish on the plate does not match the current order. Current dish: {served_dish}, Current order: {order}")
 
@@ -505,19 +503,29 @@ class Agent(GameObject):
         self.holding: Optional[Item] = None
         
         # Action queue and current action state
+        self.all_action_list: List[List[Dict]] = []
         self.all_actions: List[Dict] = []
+
         self.action_queue: List[Dict] = []
         self.current_action: Optional[Dict] = None
         self.finish_time = 0
         self.is_idle = True
+        self.all_finished = False
 
         self.all_execution_time = 0  # Total execution time for all actions
         self.waiting_time = 0  # Total waiting time when idle
         self.moving_time = 0  # Total time spent moving
         self.processing_time = 0  # Total time spent processing actions
     
+    def reset_actions(self, actions: List[Dict]):
+        self.all_actions.pop()
+        self.all_action_list.append(actions)
+        self.all_actions = [action for sublist in self.all_action_list for action in sublist]
+        self.action_queue = actions.copy()
+
     def load_actions(self, actions: List[Dict]):
-        self.all_actions.extend(actions)
+        self.all_action_list.append(actions)
+        self.all_actions = [action for sublist in self.all_action_list for action in sublist]
         self.action_queue = actions.copy()
     
     def has_actions(self) -> bool:
