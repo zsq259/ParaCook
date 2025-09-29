@@ -8,7 +8,7 @@ MODELS=(
     # "gpt-4.1"
     # "gemini-2.5-pro"
     # "claude-opus-4-1-20250805"
-    "DeepSeek-V3"
+    "DeepSeek-V3.1"
 )
 MOTHODS=("IO" "CoT")
 
@@ -55,3 +55,4 @@ for MODEL in "${MODELS[@]}"; do
         done
     done
 done
+wait
