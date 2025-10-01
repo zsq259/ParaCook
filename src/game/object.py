@@ -100,7 +100,7 @@ class Pan(Container):
         self.is_cooking: bool = False  # Is currently cooking
     
     def add_item(self, item: Ingredient, current_time: int) -> bool:
-        if item.name in ["meat"]:
+        if item.name in ["meat", "chicken", "mushroom", "tomato", "fish", "prawn"]:
             if item.state == "chopped":
                 super().add_item(item)
                 self.is_cooking = True
@@ -108,7 +108,7 @@ class Pan(Container):
                     self.current_time = current_time
                 self.required_cook_time += PROCESS_PAN_COOK_TIME
                 return True
-        raise ValueError("Can only put chopped meat for frying")
+        raise ValueError("Can only put chopped ingredients (meat, chicken, mushroom, tomato, fish, prawn) into the pan for cooking")
     
     def update_cooking(self, current_time: int):
         if not self.is_cooking:
@@ -146,7 +146,7 @@ class Pot(Container):
         self.is_cooking: bool = False  # Is currently cooking
     
     def add_item(self, item: Ingredient, current_time: int) -> bool:
-        if item.name in ["rice"]:
+        if item.name in ["rice", "pasta"]:
             if item.state == "raw":
                 super().add_item(item)
                 self.is_cooking = True
@@ -154,7 +154,7 @@ class Pot(Container):
                     self.current_time = current_time
                 self.required_cook_time += PROCESS_POT_COOK_TIME
                 return True
-        raise ValueError("Can only put raw rice for boiling")
+        raise ValueError("Can only put raw rice or pasta for boiling")
     
     def update_cooking(self, current_time: int):
         if not self.is_cooking:

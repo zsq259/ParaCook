@@ -20,6 +20,10 @@ class GPTWrapper(Model):
             self.openai_api_key = os.environ.get("GEMINI_API_KEY")
             self.openai_base_url = os.environ.get("GEMINI_BASE_URL")
             self.is_chat_model = True
+        elif "qwen" in name.lower():
+            self.openai_api_key = os.environ.get("DASHSCOPE_API_KEY")
+            self.openai_base_url = os.environ.get("DASHSCOPE_BASE_URL")
+            self.is_chat_model = True
         else:
             self.openai_api_key = os.environ.get("OPENAI_API_KEY")
             self.openai_base_url = os.environ.get("OPENAI_BASE_URL")
@@ -65,6 +69,8 @@ class GPTWrapper(Model):
 
         if self.name == "gpt-5":
             config.temperature = 1
+        if "deepseek" in self.name.lower():
+            config.max_tokens = 64000
         while attempt < retries:
             try:
                 client = OpenAI(base_url=self.openai_base_url, api_key=self.openai_api_key)

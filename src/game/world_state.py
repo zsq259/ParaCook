@@ -100,6 +100,12 @@ class World:
     def _add_object(self, obj: GameObject):
         pos = obj.get_pos()
         self.grid.setdefault(pos, []).append(obj)
+        if self.objects.get(obj.name):
+            orig_obj = self.objects[obj.name]
+            if isinstance(orig_obj, list):
+                orig_obj.append(obj)
+            else:
+                self.objects[obj.name] = obj
         self.objects[obj.name] = obj
         if isinstance(obj, Agent):
             self.agents[obj.name] = obj

@@ -176,8 +176,9 @@ class Simulator:
     def update_stations(self, current_time: int):
         """Check the status of all workstations"""
         for obj in self.world.objects.values():
-            if isinstance(obj, Pan) or isinstance(obj, Pot):
-                obj.update_cooking(current_time)
+            if isinstance(obj, Stove) and obj.item:
+                if isinstance(obj.item, Pan) or isinstance(obj.item, Pot):
+                    obj.item.update_cooking(current_time)
             elif isinstance(obj, PlateReturn):
                 obj.update(current_time)
 
