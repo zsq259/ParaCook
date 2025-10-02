@@ -13,3 +13,11 @@ pip install -r requirements.txt
 ```bash
 ./scripts/test.sh
 ```
+
+3. To human tests:
+
+Please see `scripts/test_human.sh` for details.
+
+```bash
+./scripts/test_human.sh
+```
