@@ -1,4 +1,4 @@
-import logging
+import logging, os
 
 RESET = "\x1b[0m"
 COLOR_CODES = {
@@ -31,6 +31,15 @@ handler = logging.StreamHandler()
 formatter = ColoredFormatter('%(message)s')
 handler.setFormatter(formatter)
 
+# 添加文件日志保存功能
+if not os.path.exists('tmp'):
+    os.makedirs('tmp')
+if os.path.exists('tmp/log.txt'):
+    os.remove('tmp/log.txt')
+file_handler = logging.FileHandler('tmp/log.txt', encoding='utf-8')
+file_handler.setFormatter(formatter)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+logger.addHandler(file_handler)

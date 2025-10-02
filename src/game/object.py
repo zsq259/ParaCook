@@ -293,7 +293,7 @@ class Dispenser(Station):
     """Ingredient Dispenser, can provide unlimited specific ingredients"""
     def __init__(self, name: str, x: int, y: int, provides: str):
         super().__init__(name, x, y)
-        self.provides = provides
+        self.provides: str = provides
     
     def interact(self, agent_name: str, world, current_time = None) -> bool:
         """Get ingredient or place item on top"""
@@ -307,6 +307,13 @@ class Dispenser(Station):
             return True
         else:
             return self.basic_interact(agent, current_time)
+        
+    def to_json(self):
+        data = super().to_json()
+        data.update({
+            "provides": self.provides
+        })
+        return data
 
 class ChoppingBoard(Station):
     """Chopping Board, can perform chopping operations"""

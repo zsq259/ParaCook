@@ -1,5 +1,8 @@
 import re
 import json
+import matplotlib.pyplot as plt
+import numpy as np
+from io import BytesIO
 
 def get_model(model_name):
     if "gemini" in model_name.lower():
@@ -52,7 +55,10 @@ def extract_json(text: str) -> dict|list:
             raise ValueError(f"No JSON data found in the string: \033[38;5;214m{text}\033[0m")
             
 # 将地图打印为字符画
-def print_map(map_data):
+# def print_map(map_data):
+
+def print_map_ascii(map_data):
+    # 地图字符画
     width = map_data["width"]
     height = map_data["height"]
     grid = [['   ']*width for _ in range(height)]
@@ -64,21 +70,26 @@ def print_map(map_data):
         elif ttype == "station":
             name = tile.get("name", "?")
             if "provides" in tile:
-                # 食材分发器 D(*)
                 provides = tile["provides"]
                 if isinstance(provides, str):
                     provides = [provides]
                 food = provides[0][0].upper()
                 grid[y][x] = f"D({food})"
             elif "item" in tile:
-                # 炊具或餐具
-                item = tile["item"].lower()
+                item = tile["item"]
+                # 兼容 item 为 dict 或 str
+                if isinstance(item, dict):
+                    item_name = item.get("name", "?")
+                elif isinstance(item, str):
+                    item_name = item
+                else:
+                    item_name = str(item)
+                item_name = item_name.lower()
                 symbol = {
                     "pan": "Pn ", "pot": "Pt ", "plate": "Pl "
-                }.get(item, item[:3].upper())
+                }.get(item_name, item_name[:3].upper())
                 grid[y][x] = symbol
             else:
-                # 其他 station
                 symbol = {
                     "chopping_board": "Cb ", "serving_window": "SW ", "sink": "Sk ", "stove": "St ", "table": "Tb ", "plate_return": "PR "
                 }
@@ -92,8 +103,7 @@ def print_map(map_data):
         x, y = agent["x"], agent["y"]
         grid[y][x] = f"A{idx} "
 
-    # 打印带边框的地图
-    cell_width = 4  # 每个格子的内容宽度
+    cell_width = 4
     horizontal = '─' * cell_width
     vertical = '│'
     corner_tl = '┌'
@@ -106,59 +116,193 @@ def print_map(map_data):
     cross_right = '┤'
     cross_center = '┼'
 
-    # 打印列编号（x轴）并标注
+    lines = []
     x_label = ' ' * 6 + 'x→'
     col_header = ' ' * 6 + ''.join(f'{i:^{cell_width+1}}' for i in range(width))
-    print(x_label)
-    print(col_header)
-    # 打印顶部边框
-    print(' ' * 6 + corner_tl + (horizontal + cross_top) * (width - 1) + horizontal + corner_tr)
+    lines.append(x_label)
+    lines.append(col_header)
+    lines.append(' ' * 6 + corner_tl + (horizontal + cross_top) * (width - 1) + horizontal + corner_tr)
     for i, row in enumerate(grid):
-        # 打印内容行，每个格子内容居中，左侧加行号（y轴）
         if i == 0:
             y_label = 'y↓'
         else:
             y_label = '  '
         content = f'{y_label}{i:>2}  ' + vertical + vertical.join(f"{str(cell):^{cell_width}}" for cell in row) + vertical
-        print(content)
-        # 打印中间分割线或底部边框
+        lines.append(content)
         if i < height - 1:
-            print(' ' * 6 + cross_left + (horizontal + cross_center) * (width - 1) + horizontal + cross_right)
+            lines.append(' ' * 6 + cross_left + (horizontal + cross_center) * (width - 1) + horizontal + cross_right)
         else:
-            print(' ' * 6 + corner_bl + (horizontal + cross_bottom) * (width - 1) + horizontal + corner_br)
+            lines.append(' ' * 6 + corner_bl + (horizontal + cross_bottom) * (width - 1) + horizontal + corner_br)
+    return '\n'.join(lines)
 
-    # 收集所有 station 缩写及其详细信息
-    # 按坐标顺序逐个显示每个 station 的缩写和名字
-    print("\nStation Abbreviation Legend:")
-    for tile in sorted([t for t in map_data["tiles"] if t["type"] == "station"], key=lambda t: (t["y"], t["x"])):
-        name = tile.get("name", "?")
-        x, y = tile["x"], tile["y"]
-        detail = ""
-        if "provides" in tile:
-            provides = tile["provides"]
-            if isinstance(provides, str):
-                provides = [provides]
-            food = provides[0][0].upper()
-            abbr = f"D({food})"
-            detail = f"(Dispenser for {', '.join(provides)})"
-        elif "item" in tile:
-            item = tile["item"].lower()
-            abbr = {
-                "pan": "Pn ", "pot": "Pt ", "plate": "Pl "
-            }.get(item, item[:3].upper())
-            detail = f"(with {item})"
+def get_map_legend(map_data):
+    def dict_to_str(d, prefix=''):
+        if isinstance(d, dict):
+            parts = []
+            for k, v in d.items():
+                if isinstance(v, (dict, list)):
+                    parts.append(f"{prefix}{k}: {dict_to_str(v, prefix=prefix+'  ')}")
+                else:
+                    parts.append(f"{prefix}{k}: {v}")
+            return '{' + ', '.join(parts) + '}'
+        elif isinstance(d, list):
+            return '[' + ', '.join([dict_to_str(x, prefix=prefix+'  ') for x in d]) + ']'
         else:
+            return str(d)
+
+    legend_lines = []
+    legend_lines.append("Station Abbreviation Legend:")
+    for tile in sorted([t for t in map_data["tiles"] if t.get("type") == "station"], key=lambda t: (t.get("y", 0), t.get("x", 0))):
+        name = tile.get("name", "?")
+        x, y = tile.get("x", "?"), tile.get("y", "?")
+        abbr = ""
+        detail = []
+        provides = tile.get("provides", None)
+        if provides is not None:
+            if isinstance(provides, str):
+                provides_list = [provides]
+            elif isinstance(provides, list):
+                provides_list = provides
+            else:
+                provides_list = [str(provides)]
+            food = str(provides_list[0])[0].upper()
+            abbr = f"D({food})"
+            detail.append(f"Dispenser for: {', '.join(map(str, provides_list))}")
+        item = tile.get("item", None)
+        if item is not None:
+            # 兼容 dict、str、None
+            if isinstance(item, dict):
+                item_name = item.get("name", "?")
+                abbr = {
+                    "pan": "Pn ", "pot": "Pt ", "plate": "Pl "
+                }.get(str(item_name).lower(), str(item_name)[:3].upper())
+                detail.append(f"Item: {dict_to_str(item)}")
+            elif isinstance(item, str):
+                item_name = item
+                abbr = {
+                    "pan": "Pn ", "pot": "Pt ", "plate": "Pl "
+                }.get(item_name.lower(), item_name[:3].upper())
+                detail.append(f"Item: {item_name}")
+            else:
+                abbr = str(item)[:3].upper()
+                detail.append(f"Item: {item}")
+        if not abbr:
             symbol = {
                 "chopping_board": "Cb ", "serving_window": "SW ", "sink": "Sk ", "stove": "St ", "table": "Tb ", "plate_return": "PR "
             }
             for k, v in symbol.items():
-                if name.startswith(k):
+                if str(name).startswith(k):
                     abbr = v
                     break
             else:
-                abbr = name[:3].upper()
-            detail = ""
-        print(f"  ({x},{y}) {abbr}: {name} {detail}")
+                abbr = str(name)[:3].upper()
+        # 展示所有字段
+        for k, v in tile.items():
+            if k in ("name", "x", "y", "type", "provides", "item"):
+                continue
+            detail.append(f"{k}: {dict_to_str(v)}")
+        legend_lines.append(f"  ({x},{y}) {abbr}: {name} | " + ' | '.join(detail))
+
+    # 输出 agent 信息
+    legend_lines.append("\nAgent Info:")
+    for idx, agent in enumerate(map_data.get("agents", []), 1):
+        agent_str = dict_to_str(agent)
+        legend_lines.append(f"  Agent{idx}: {agent_str}")
+    return '\n'.join(legend_lines)
+
+
+def draw_map_image(map_data):
+    width = map_data["width"]
+    height = map_data["height"]
+    fig, ax = plt.subplots(figsize=(width/3, height/3))
+    
+    # 坐标范围：让格子中心在整数坐标上
+    ax.set_xlim(0, width)
+    ax.set_ylim(0, height)
+    
+    # 网格线在格子边界（半整数位置）
+    ax.set_xticks(np.arange(0, width+1, 1))
+    ax.set_yticks(np.arange(0, height+1, 1))
+    ax.grid(True, color='gray', linewidth=0.5)
+    ax.set_aspect('equal')
+    ax.invert_yaxis()
+
+    # 将 x 轴移到顶部
+    ax.xaxis.tick_top()
+    ax.xaxis.set_label_position('top')
+
+    # 绘制 tile - 格子中心在 (x+0.5, y+0.5)
+    from matplotlib.patches import Rectangle
+    station_colors = {
+        'dispenser': '#A3E635',      # 绿色
+        'chopping_board': '#FBBF24', # 黄色
+        'stove': '#F87171',          # 红色
+        'sink': '#60A5FA',           # 蓝色
+        'serving_window': '#A78BFA', # 紫色
+        'table': "#979797",          # 灰白
+        'plate_return': '#34D399',   # 青色
+        # 其他类型可继续扩展
+    }
+    for tile in map_data["tiles"]:
+        x, y = tile["x"], tile["y"]
+        ttype = tile["type"]
+        if ttype == "obstacle":
+            ax.add_patch(Rectangle((x, y), 1, 1, color='black'))
+        elif ttype == "station":
+            name = tile.get("name", "?")
+            color = '#93C5FD' # 默认浅蓝
+            label = name[:2]
+            # 如果有 item，优先用 item 类型
+            if "item" in tile:
+                item = tile["item"]
+                if isinstance(item, dict):
+                    item_name = item.get("name", "?")
+                elif isinstance(item, str):
+                    item_name = item
+                else:
+                    item_name = str(item)
+                item_name = item_name.lower()
+                # label 优先用容器类型
+                label = {
+                    "pan": "Pn", "pot": "Pt", "plate": "Pl"
+                }.get(item_name, item_name[:2].upper())
+            # 根据 station 名字前缀判断类型
+            if 'dispenser' in name:
+                color = station_colors['dispenser']
+                label = 'D'
+            elif name.startswith('chopping_board'):
+                color = station_colors['chopping_board']
+                label = 'Cb'
+            elif name.startswith('stove'):
+                color = station_colors['stove']
+                label = 'St'
+            elif name.startswith('sink'):
+                color = station_colors['sink']
+                label = 'Sk'
+            elif name.startswith('serving_window'):
+                color = station_colors['serving_window']
+                label = 'SW'
+            elif name.startswith('table'):
+                color = station_colors['table']
+                label = 'Tb'
+            elif name.startswith('plate_return'):
+                color = station_colors['plate_return']
+                label = 'PR'
+            ax.add_patch(Rectangle((x, y), 1, 1, color=color, alpha=0.7))
+            ax.text(x+0.5, y+0.5, label, ha='center', va='center', fontsize=8, color='black')
+    
+    # 绘制 agent - 放在格子中心
+    for idx, agent in enumerate(map_data["agents"], 1):
+        x, y = agent["x"], agent["y"]
+        ax.plot(x+0.5, y+0.5, 'ro', markersize=12)
+        ax.text(x+0.5, y+0.5, f"A{idx}", ha='center', va='center', fontsize=10, color='white')
+
+    plt.tight_layout()
+    buf = BytesIO()
+    plt.savefig(buf, format='png', dpi=150)
+    plt.close(fig)
+    buf.seek(0)
+    return buf
 
 if __name__ == "__main__":
     sample_map = {
@@ -319,5 +463,6 @@ if __name__ == "__main__":
     ]
 }
     from src.utils.random_map import check_reachability
-    print_map(sample_map)
+    print(print_map_ascii(sample_map))
+    print(get_map_legend(sample_map))
     print("Is map reachable?", check_reachability(sample_map))

@@ -233,8 +233,54 @@ class FixedAgent(Agent):
                     {"action": "Interact", "target": "serving_window"}, # 上菜，耗时0，当前时间30
                 ]
             }
+        elif orders == ["pasta_mushroom", "pasta_tomato"] and map_name == "kitchen":
+            return {
+                "agent1": [
+                    {"action": "MoveTo", "target": [8, 5]},
+                    {"action": "Interact", "target": "dispenser6"},
+                    {"action": "MoveTo", "target": [2, 1]},
+                    {"action": "Interact", "target": "stove3"},
+                    {"action": "MoveTo", "target": [8, 5]},
+                    {"action": "Interact", "target": "dispenser6"},
+                    {"action": "MoveTo", "target": [1, 4]},
+                    {"action": "Interact", "target": "stove4"},
+                    {"action": "MoveTo", "target": [2, 5]},
+                    {"action": "Interact", "target": "table1"},
+                    {"action": "MoveTo", "target": [1, 6]},
+                    {"action": "Interact", "target": "stove2"},
+                    {"action": "MoveTo", "target": [2, 1]},
+                    {"action": "Interact", "target": "stove3"},
+                    {"action": "MoveTo", "target": [2, 6]},
+                    {"action": "Interact", "target": "serving_window"},
+                ],
+                "agent2": [
+                    {"action": "Interact", "target": "dispenser5"},
+                    {"action": "MoveTo", "target": [4, 6]},
+                    {"action": "Interact", "target": "chopping_board2"},
+                    {"action": "Process", "target": "chopping_board2"},
+                    {"action": "Interact", "target": "chopping_board2"},
+                    {"action": "MoveTo", "target": [1, 6]},
+                    {"action": "Interact", "target": "stove2"},
+                    {"action": "MoveTo", "target": [7, 1]},
+                    {"action": "Interact", "target": "dispenser2"},
+                    {"action": "MoveTo", "target": [1, 2]},
+                    {"action": "Interact", "target": "chopping_board1"},
+                    {"action": "Process", "target": "chopping_board1"},
+                    {"action": "Interact", "target": "chopping_board1"},
+                    {"action": "MoveTo", "target": [8, 4]},
+                    {"action": "Interact", "target": "stove1"},
+                    {"action": "MoveTo", "target": [7, 2]},
+                    {"action": "Interact", "target": "table2"},
+                    {"action": "MoveTo", "target": [1, 4]},
+                    {"action": "Interact", "target": "stove4"},
+                    {"action": "MoveTo", "target": [8, 4]},
+                    {"action": "Interact", "target": "stove1"},
+                    {"action": "MoveTo", "target": [2, 6]},
+                    {"action": "Interact", "target": "serving_window"},
+                ]
+            }
         else:
-            raise ValueError(f"未知订单: {orders}")
+            raise ValueError(f"Unknown orders: {orders}, map: {map_name}")
     
     def run_test(self, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
         world = simulator.world

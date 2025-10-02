@@ -12,6 +12,7 @@ from src.agent.method.CoT.CoT import CoTAgent
 from src.agent.method.ReAct.ReAct import ReActAgent
 from src.agent.method.MultiStepReAct.MultiStepReAct import MultiStepReActAgent
 from src.agent.method.Fixed.Fixed import FixedAgent
+from src.agent.method.Human.Human import HumanAgent
 from src.utils.logger_config import logger, COLOR_CODES, RESET
 
 name_to_agent = {
@@ -19,7 +20,8 @@ name_to_agent = {
     "CoT": CoTAgent,
     "ReAct": ReActAgent,
     "MultiStepReAct": MultiStepReActAgent,
-    "Fixed": FixedAgent
+    "Fixed": FixedAgent,
+    "Human": HumanAgent,
 }
 
 def load_data(filename):

@@ -71,7 +71,7 @@ if __name__ == "__main__":
     models = ["gpt-5", "gemini-2.5-pro"]
     # models = ["claude-opus-4-1-20250805"]
     # methods = ["IO", "CoT"]
-    methods = ["MultiStepReAct"]
+    methods = ["IO", "CoT", "MultiStepReAct"]
     recipes = ["sashimi", "salad", "sushi", "burger", "pasta", "burrito"]
     for model in models:
         for method in methods:

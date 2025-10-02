@@ -190,7 +190,11 @@ class Simulator:
         logger.info(self.world.to_json())
 
         while self.event_queue:
-            self.step()
+            try:
+                self.step()
+            except ActionExecutionError as e:
+                logger.error(f"{COLOR_CODES['RED']}Simulation error: {e}{RESET}")
+                return
 
         logger.info(f"\n=== Simulation Ended, Total Time {self.current_time} ===")
 
