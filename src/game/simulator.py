@@ -3,6 +3,8 @@
 from typing import Dict, List, Optional, Any
 from heapq import heappop, heappush
 
+from regex import E
+
 from src.game.world_state import World
 from src.game.object import *
 from src.game.const import *
@@ -192,7 +194,7 @@ class Simulator:
         while self.event_queue:
             try:
                 self.step()
-            except ActionExecutionError as e:
+            except Exception as e:
                 logger.error(f"{COLOR_CODES['RED']}Simulation error: {e}{RESET}")
                 return
 

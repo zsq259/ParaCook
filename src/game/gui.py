@@ -95,6 +95,7 @@ def action_editor(agent_names):
         params["duration"] = st.number_input("Wait Duration", min_value=1, value=1, key="wait_input")
     elif action_type in ["Interact", "Process"]:
         target_obj = st.text_input("Target Object Name", key="target_obj_input")
+        params["target"] = target_obj.strip()
 
     if st.button("Add Action"):
         if action_type == "MoveTo":

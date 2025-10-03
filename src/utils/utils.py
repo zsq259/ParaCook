@@ -216,22 +216,28 @@ def draw_map_image(map_data):
     height = map_data["height"]
     fig, ax = plt.subplots(figsize=(width/3, height/3))
     
-    # 坐标范围：让格子中心在整数坐标上
     ax.set_xlim(0, width)
     ax.set_ylim(0, height)
     
-    # 网格线在格子边界（半整数位置）
-    ax.set_xticks(np.arange(0, width+1, 1))
-    ax.set_yticks(np.arange(0, height+1, 1))
-    ax.grid(True, color='gray', linewidth=0.5)
+    ax.set_xticks(np.arange(width) + 0.5)
+    ax.set_yticks(np.arange(height) + 0.5)
+
+    ax.set_xticklabels(np.arange(width))
+    ax.set_yticklabels(np.arange(height))
+
+    ax.set_xticks(np.arange(width + 1), minor=True)
+    ax.set_yticks(np.arange(height + 1), minor=True)
+
+    ax.grid(which='minor', color='gray', linewidth=0.5)
+
+    ax.tick_params(which='major', bottom=False, left=False)
+
     ax.set_aspect('equal')
     ax.invert_yaxis()
 
-    # 将 x 轴移到顶部
     ax.xaxis.tick_top()
     ax.xaxis.set_label_position('top')
 
-    # 绘制 tile - 格子中心在 (x+0.5, y+0.5)
     from matplotlib.patches import Rectangle
     station_colors = {
         'dispenser': '#A3E635',      # 绿色
@@ -241,7 +247,6 @@ def draw_map_image(map_data):
         'serving_window': '#A78BFA', # 紫色
         'table': "#979797",          # 灰白
         'plate_return': '#34D399',   # 青色
-        # 其他类型可继续扩展
     }
     for tile in map_data["tiles"]:
         x, y = tile["x"], tile["y"]
@@ -252,7 +257,6 @@ def draw_map_image(map_data):
             name = tile.get("name", "?")
             color = '#93C5FD' # 默认浅蓝
             label = name[:2]
-            # 如果有 item，优先用 item 类型
             if "item" in tile:
                 item = tile["item"]
                 if isinstance(item, dict):
@@ -262,11 +266,9 @@ def draw_map_image(map_data):
                 else:
                     item_name = str(item)
                 item_name = item_name.lower()
-                # label 优先用容器类型
                 label = {
                     "pan": "Pn", "pot": "Pt", "plate": "Pl"
                 }.get(item_name, item_name[:2].upper())
-            # 根据 station 名字前缀判断类型
             if 'dispenser' in name:
                 color = station_colors['dispenser']
                 label = 'D'
@@ -291,7 +293,6 @@ def draw_map_image(map_data):
             ax.add_patch(Rectangle((x, y), 1, 1, color=color, alpha=0.7))
             ax.text(x+0.5, y+0.5, label, ha='center', va='center', fontsize=8, color='black')
     
-    # 绘制 agent - 放在格子中心
     for idx, agent in enumerate(map_data["agents"], 1):
         x, y = agent["x"], agent["y"]
         ax.plot(x+0.5, y+0.5, 'ro', markersize=12)
