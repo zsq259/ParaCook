@@ -11,6 +11,7 @@ class World:
         self.height = map_data['height']
         
         self.objects_info = {o['name']: o for o in objects_info}
+        self.objects_count = {o['name']: 0 for o in objects_info}
         self.recipes = recipes
         self.orders = orders
         self.finished_orders = []
@@ -100,12 +101,11 @@ class World:
     def _add_object(self, obj: GameObject):
         pos = obj.get_pos()
         self.grid.setdefault(pos, []).append(obj)
-        if self.objects.get(obj.name):
-            orig_obj = self.objects[obj.name]
-            if isinstance(orig_obj, list):
-                orig_obj.append(obj)
-            else:
-                self.objects[obj.name] = obj
+        if obj.name in self.objects_count:
+            name = obj.name
+            if obj.type == "obstacle" and self.objects_count.get(obj.name, 0) > 0:
+                obj.name = f"{obj.name}_{self.objects_count[obj.name]}"
+            self.objects_count[name] += 1
         self.objects[obj.name] = obj
         if isinstance(obj, Agent):
             self.agents[obj.name] = obj
