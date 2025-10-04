@@ -1,0 +1,293 @@
+{
+    "done": true,
+    "time": 75,
+    "finished_orders": [
+        "burrito_mushroom",
+        "burrito_mushroom"
+    ],
+    "remaining_orders": [],
+    "agent_progress": {
+        "agent1": "24/24",
+        "agent2": "25/25"
+    },
+    "agent_all_execution_time": {
+        "agent1": 73,
+        "agent2": 75
+    },
+    "agent_waiting_time": {
+        "agent1": 6,
+        "agent2": 10
+    },
+    "agent_moving_time": {
+        "agent1": 63,
+        "agent2": 61
+    },
+    "agent_processing_time": {
+        "agent1": 4,
+        "agent2": 4
+    },
+    "error": null,
+    "retry_count": 0,
+    "plan": {
+        "agent1": [
+            {
+                "action": "MoveTo",
+                "target": [
+                    7,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "dispenser2"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    4,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "stove4"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    5,
+                    1
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "dispenser4"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    6,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "chopping_board1"
+            },
+            {
+                "action": "Process",
+                "target": "chopping_board1"
+            },
+            {
+                "action": "Interact",
+                "target": "chopping_board1"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    3,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "stove2"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    1,
+                    4
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "dispenser5"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    7,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "table1"
+            },
+            {
+                "action": "Interact",
+                "target": "table1"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    9,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "stove3"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    6,
+                    1
+                ]
+            },
+            {
+                "action": "Wait",
+                "duration": 6
+            },
+            {
+                "action": "Interact",
+                "target": "stove1"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    0,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "serving_window"
+            }
+        ],
+        "agent2": [
+            {
+                "action": "MoveTo",
+                "target": [
+                    7,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "dispenser2"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    9,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "stove3"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    5,
+                    1
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "dispenser4"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    1,
+                    2
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "chopping_board2"
+            },
+            {
+                "action": "Process",
+                "target": "chopping_board2"
+            },
+            {
+                "action": "Interact",
+                "target": "chopping_board2"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    6,
+                    1
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "stove1"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    1,
+                    4
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "dispenser5"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    6,
+                    2
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "table2"
+            },
+            {
+                "action": "Interact",
+                "target": "table2"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    4,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "stove4"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    3,
+                    6
+                ]
+            },
+            {
+                "action": "Wait",
+                "duration": 8
+            },
+            {
+                "action": "Wait",
+                "duration": 2
+            },
+            {
+                "action": "Interact",
+                "target": "stove2"
+            },
+            {
+                "action": "MoveTo",
+                "target": [
+                    0,
+                    6
+                ]
+            },
+            {
+                "action": "Interact",
+                "target": "serving_window"
+            }
+        ]
+    }
+}
