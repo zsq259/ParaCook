@@ -1,30 +1,19 @@
 import json
 import os
-from turtle import update
 
-from regex import F
+from src.analysis.compute_sequencial_time import compute_order_time_and_movements, get_dish_time_and_movements
 
-max_time_dict = {}
-min_time_dict = {}
-# max_waiting_time_dict = {}
-# min_waiting_time_dict = {}
-max_moving_time_dict = {}
-min_moving_time_dict = {}
-
-def update_dict(d: dict, key, value, func):
-    if key not in d:
-        d[key] = value
-    else:
-        d[key] = func(d[key], value)
-
-def collect_statistics(model: str, method: str, normalize: str|None, agent_nums: list|None=None, orders_nums: list|None=None, recipes: list|None=None) -> dict | None:
+def collect_statistics(model: str, method: str, orders_data: dict, dish_time_and_movements:dict, agent_nums: list|None=None, orders_nums: list|None=None, recipes: list|None=None) -> dict | None:
     max_retry_count = 0
     
     seeds = [42, 84, 126, 128, 256]
+    # seeds = [42]
     if agent_nums is None:
         agent_nums = [1, 2, 3]
+        # agent_nums = [2]
     if orders_nums is None:
         orders_nums = [1, 2, 3, 4]
+        # orders_nums = [2]
     if recipes is None:
         recipes = ["sashimi", "salad", "sushi", "burger", "pasta", "burrito"]
     
@@ -46,49 +35,35 @@ def collect_statistics(model: str, method: str, normalize: str|None, agent_nums:
                         with open(result_path, 'r', encoding='utf-8') as f:
                             data = json.load(f)
                             all_count += 1
+
+                            orders = orders_data[f"{recipe}/seed_{seed}/orders_num_{orders_num}"]
+                            sequencial_time, sequencial_movements = compute_order_time_and_movements(orders, dish_time_and_movements)
+
                             if data["done"]:
                                 success_count += 1
                                 max_retry_count = max(max_retry_count, data.get("retry_count", 0))
-                                key = (recipe, seed, agent_num, orders_num)
-                                update_dict(max_time_dict, key, data["time"], max)
-                                update_dict(min_time_dict, key, data["time"], min)
                                 all_time.append(data["time"])
-
-                                if normalize == "linear":
-                                    max_time = max_time_dict[key]
-                                    min_time = min_time_dict[key]
-                                    all_time.append((data["time"] - min_time) / (max_time - min_time))
-                                elif normalize == "ratio":
-                                    min_time = min_time_dict[key]
-                                    all_time_rate.append(data["time"] / min_time)
-
+                                all_time_rate.append(data["time"] / sequencial_time if sequencial_time > 0 else 0)
                                 for name, time in data["agent_waiting_time"].items():
-                                    # update_dict(max_waiting_time_dict, key, time, max)
-                                    # update_dict(min_waiting_time_dict, key, time, min)
                                     agent_waiting_times.append(time)
                                     agent_utilizations.append((data["agent_all_execution_time"][name] - time) / data["agent_all_execution_time"][name] if data["agent_all_execution_time"][name] > 0 else 0)
                                 for name, time in data["agent_moving_time"].items():
-                                    if time != 0:
-                                        update_dict(max_moving_time_dict, key, time, max)
-                                        update_dict(min_moving_time_dict, key, time, min)
                                     agent_movements.append(time)
-                                    if normalize == "linear":
-                                        max_moving_time = max_moving_time_dict[key]
-                                        min_moving_time = min_moving_time_dict[key]
-                                        agent_movements.append((time - min_moving_time) / (max_moving_time - min_moving_time))
-                                    elif normalize == "ratio":
-                                        min_moving_time = min_moving_time_dict[key]
-                                        agent_movements_rate.append(time / min_moving_time)
+                                
+                            else:
+                                all_time.append(sequencial_time)
+                                # all_time_rate.append(1.0)
+                                for name, time in data["agent_moving_time"].items():
+                                    agent_movements.append(sequencial_movements / agent_num)
                     else:
-                        # print(f"结果文件 {result_path} 不存在，跳过。")
                         pass
     # print("Max retry count:", max_retry_count)
 
     if all_count == 0:
         return None
     
-    assert success_count == len(all_time)
-    assert len(agent_movements) == len(agent_waiting_times) == len(agent_utilizations)
+    # assert success_count == len(all_time)
+    assert len(agent_waiting_times) == len(agent_utilizations)
     return {
         "model": model,
         "method": method,
@@ -97,6 +72,7 @@ def collect_statistics(model: str, method: str, normalize: str|None, agent_nums:
         "all_count": all_count,
         "success_rate": success_count / all_count,
         "all_time": sum(all_time),
+        "all_avg_time": sum(all_time) / len(all_time) if len(all_time) > 0 else 0,
         "all_movements": sum(agent_movements),
         "all_waiting_time": sum(agent_waiting_times),
         "avg_time_rate": sum(all_time_rate) / len(all_time_rate) if len(all_time_rate) > 0 else 0,
@@ -108,43 +84,44 @@ def collect_statistics(model: str, method: str, normalize: str|None, agent_nums:
     
 
 if __name__ == "__main__":
-    models = ["gpt-5", "gpt-5-2025-08-07", "gemini-2.5-pro", "claude-opus-4-1-20250805", "deepseek-reasoner", "qwen3-max-preview"]
+    # models = ["gpt-5", "gpt-5-2025-08-07", "gemini-2.5-pro", "claude-opus-4-1-20250805", "deepseek-reasoner", "qwen3-max-preview"]
+    models = ["gpt-5", "gpt-5-2025-08-07", "gemini-2.5-pro", "deepseek-reasoner", "claude-opus-4-1-20250805", "qwen3-max-preview"]
+    # models = ["pr", "gpt-5", "gemini-2.5-pro", "deepseek-reasoner"]
     methods = ["IO", "CoT", "MultiStepReAct"]
-    recipes = [["sashimi", "salad"], ["sushi", "burger"], ["pasta", "burrito"]]
+    # methods = ["IO", "CoT", "Human"]
+    # recipes = [["sashimi", "salad"], ["sushi", "burger"], ["pasta", "burrito"]]
+    recipes = [["sashimi", "salad"], ["pasta", "burrito"], ["sushi", "burger"]]
     # recipes = ["sashimi", "salad", "sushi", "burger", "pasta", "burrito"]
 
-    for model in models:
-        for method in methods:
-            for recipe in recipes:
-                if not isinstance(recipe, list):
-                    recipe = [recipe]
-                collect_statistics(model, method, normalize=None, recipes=recipe)
+    orders_path = "data/cook/orders/all_orders.json"
+    with open(orders_path, 'r') as f:
+        orders_data = json.load(f)
 
-    # print("Max time dict:")
-    # for key, value in max_time_dict.items():
-    #     print(f"{key}: {value}")
-    # print("\nMin time dict:")
-    # for key, value in min_time_dict.items():
-    #     print(f"{key}: {value}")
+    dish_time_and_movements = get_dish_time_and_movements()
 
     for model in models:
         for method in methods:
             all_count = 0
             success_count = 0
+
+            output_line = ""
             for recipe in recipes:
                 if not isinstance(recipe, list):
                     recipe = [recipe]
-                result = collect_statistics(model, method, normalize="ratio", recipes=recipe)
+                result = collect_statistics(model, method, orders_data, dish_time_and_movements, recipes=recipe)
                 if not result:
                     continue
                 if result:
                     all_count += result["all_count"]
                     success_count += result["success_count"]
-                avg_time = result["all_time"] / result["success_count"] if result["success_count"] > 0 else 0
+                avg_time = result["all_avg_time"]
                 avg_time_rate = result["avg_time_rate"]
                 avg_agent_utilization = result["agent_avg_utilization"]
-                avg_moving_time_rate = result["agent_avg_movements_rate"]
-                print(f"Model: {model}, Method: {method}, Recipe: {recipe}, Count: {result.get('all_count', 0)}, Success: {result.get('success_count', 0)}, Success Rate: {result.get('success_rate', 0):.2f}")
-                print(f"Average Time: {avg_time:.2f}, Average Time Rate: {avg_time_rate:.2f}, Average Agent Utilization: {avg_agent_utilization:.2f}, Average Moving Time: {avg_moving_time_rate:.2f}")
-                
-            print(f"Model: {model}, Method: {method}, Total Count: {all_count}, Total Success: {success_count}, Overall Success Rate: {success_count / all_count if all_count > 0 else 0:.2f}\n")
+                agent_avg_movements = result["agent_avg_movements"]
+
+                output_line += f"{result.get('success_rate', 0):.4f} & {avg_time:.2f} & {avg_time_rate:.4f} & {agent_avg_movements:.2f} & {avg_agent_utilization:.4f} & "
+                print(f"Model: {model}, Method: {method}, Recipe: {recipe}, Count: {result.get('all_count', 0)}, Success: {result.get('success_count', 0)}, Success Rate: {result.get('success_rate', 0):.4f}")
+                print(f"Average Time: {avg_time:.2f}, Average Time Rate: {avg_time_rate:.4f}, Average Agent Utilization: {avg_agent_utilization:.4f}, Average Moving Time: {agent_avg_movements:.2f}")
+            if len(output_line) > 0:
+                # print(model, method, output_line)
+                print(f"Model: {model}, Method: {method}, Total Count: {all_count}, Total Success: {success_count}, Overall Success Rate: {success_count / all_count if all_count > 0 else 0:.2f}\n")
