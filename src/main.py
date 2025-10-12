@@ -39,14 +39,14 @@ def run_test(args):
             if data.get("time", 0) > 0:
                 logger.info(f"{COLOR_CODES['GREEN']}result file {result_path} already exists, skipping execution.{RESET}")
                 return
-    # --- 1. 加载配置数据 ---
+    # --- 1. Load configuration data ---
     map_data = load_data(f'{args.map}.json')
     ingredient_data = load_data(f'config/item/{args.ingredient}.json')
     object_data = load_data(f'config/item/{args.object}.json')
-    orders = args.orders if args.orders else [] # 测试时的订单列表（格式为 分类/名称）
-    order_names = [order.split('/')[1] for order in orders] # 订单名称列表
-    recipe_data = [] # world 中记录的所有菜谱数据
-    recipes = [] # 传给 agent 的菜谱数据
+    orders = args.orders if args.orders else [] # Order list for testing (format: category/name)
+    order_names = [order.split('/')[1] for order in orders] # List of order names
+    recipe_data = [] # All recipe data recorded in world
+    recipes = [] # Recipe data passed to agent
     
     unique_orders = list(set(orders))
     for order in unique_orders:
@@ -58,11 +58,11 @@ def run_test(args):
                 recipes.append(recipe["name"] + ": " + recipe["recipe"])
                 break
 
-    # --- 2. 初始化世界和模拟器 ---
+    # --- 2. Initialize world and simulator ---
     world = World(map_data, object_data, recipe_data, orders=order_names)
     simulator = Simulator(world)
 
-    # --- 3. 初始化Agent并运行测试 ---
+    # --- 3. Initialize Agent and run test ---
     model = get_model(args.model)
     agent = name_to_agent[args.agent](model)
     result = agent.run_test(simulator, recipes, args.examples if args.examples else [])
@@ -77,36 +77,36 @@ def run_test(args):
 
 
 def parse_arguments():
-    """解析命令行参数"""
-    parser = argparse.ArgumentParser(description='OverCooked 智能体实验程序')
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description='OverCooked Agent Experiment Program')
     
-    # 必需参数
+    # Required parameters
     parser.add_argument('--model', '-m', required=True, 
-                       help='使用的模型 (例如: gpt-4o, gemini-2.5-pro)')
+                       help='Model to use (e.g., gpt-4o, gemini-2.5-pro)')
     parser.add_argument('--agent', '-a', required=True, 
-                       help='使用的智能体方法')
+                       help='Agent method to use')
     
-    # 可选参数，设置默认值
+    # Optional parameters with default values
     parser.add_argument('--ingredient', '-i', default='ingredient',
-                       help='食材配置文件名 (默认: ingredient)')
+                       help='Ingredient configuration file name (default: ingredient)')
     parser.add_argument('--object', '-o', default='station',
-                       help='物品配置文件名 (默认: station)')
-    parser.add_argument('--map', default='config/map/map1',
-                       help='地图文件路径 (默认: config/map/map1)')
+                       help='Object configuration file name (default: station)')
+    parser.add_argument('--map', default='config/map_examples/map1',
+                       help='Map file path (default: config/map_examples/map1)')
     
-    # 列表参数
+    # List parameters
     parser.add_argument('--examples', nargs='*', default=["salad_advanced"],
-                       help='示例列表 (例如: --examples salad_advanced burger_basic)')
+                       help='Example list (e.g., --examples salad_advanced burger_basic)')
     parser.add_argument('--orders', nargs='*',
-                       help='订单列表 (例如: --orders salad/salad_advanced burger/burger_basic)')
+                       help='Order list (e.g., --orders salad/salad_advanced burger/burger_basic)')
     
-    # 配置文件
+    # Configuration file
     parser.add_argument('--config', '-c', type=str,
-                       help='配置文件路径 (如果指定，会与命令行参数合并)')
+                       help='Configuration file path (if specified, will be merged with command line arguments)')
     
-    # 结果路径
+    # Result path
     parser.add_argument('--result-path', '-r', default='tmp',
-                       help='结果文件路径 必须指定')
+                       help='Result file path must be specified')
     
     return parser.parse_args()
 

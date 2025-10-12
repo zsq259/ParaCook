@@ -1,10 +1,8 @@
 #!/bin/bash
 
 
-python -m src.main --model gpt-4o --agent CoT --examples burger_basic --orders salad/salad_advanced
+# Run single model test examples
+python -m src.main --model gpt-5 --agent CoT --examples burger_basic --orders burger/burger_basic --map config/map_examples/map2.json
 
-python -m src.main --model gemini-2.5-pro --agent MultiStepReAct --examples salad_advanced --orders sushi/sushi_fish --map config/map/map3
-
-python -m src.main --model gpt-4o --agent Fixed --examples burger_basic --orders salad/salad_advanced
-python -m src.main --model gpt-4o --agent Fixed --orders sushi/sushi_fish --map config/map/map3
-python -m src.main --model gpt-4o --agent Fixed --orders salad/salad_advanced
+# Run single human test example
+python -m src.main --model name --agent Human --orders pasta/pasta_mushroom pasta/pasta_tomato --map data/cook/maps/pasta/seed_42/agent_num_2

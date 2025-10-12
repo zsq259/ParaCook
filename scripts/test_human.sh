@@ -4,17 +4,12 @@
 trap "echo 'kill all child processes'; kill 0; exit" SIGINT
 
 # Please enter the model name as your name
-MODELS=("hastin")
+MODELS=("name")
 MOTHODS=("Human")
 
 RECIPES=("sashimi" "salad" "sushi" "burger" "pasta" "burrito")
-# RECIPES=("sashimi" "salad" "sushi" "burger")
-# RECIPES=("pasta")
 AGENT_NUMS=(2)
 ORDERS_NUMS=(2)
-# AGENT_NUMS=(2)
-# ORDERS_NUMS=(1)
-# SEEDS=(42 84 126)
 SEEDS=(42)
 
 MAX_JOBS=1
