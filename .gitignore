@@ -1,3 +1,4 @@
-results/
+results*/
 logs/
 __pycache__/
+tmp/
