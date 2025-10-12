@@ -39,7 +39,7 @@ class ClaudeWrapper(Model):
                         {
                             "type": "text",
                             "text": system_prompt,
-                            "cache_control": {"type": "ephemeral"}  # 启用缓存
+                            "cache_control": {"type": "ephemeral"}  # Use Prompt Caching
                         }
                     ]
                     cache_block_count += 1
@@ -105,7 +105,6 @@ class ClaudeWrapper(Model):
         return response
 
 def main():
-    """测试代码"""
     model = ClaudeWrapper(name="claude-sonnet-4-20250514")
     prompt = "What is your name and version?"
     config = PredictConfig(prompt=prompt, temperature=0, max_tokens=1000)

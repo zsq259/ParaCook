@@ -1,14 +1,15 @@
 import json
 import random
 import os
-from src.utils.utils import print_map
+from collections import deque
+from src.utils.utils import print_map_ascii
 
 def load_json(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 def get_stations_from_orders(orders, recipe_dir, num_chopping_board=1, num_each_cookware=1):
-    # 统计订单所需食材和工序
+    # Collect required ingredients and workstations based on orders
     needed_ingredients = set()
     needed_workstations = set()
     needed_cookware = set()
@@ -21,7 +22,7 @@ def get_stations_from_orders(orders, recipe_dir, num_chopping_board=1, num_each_
             raise ValueError(f"Recipe {name} not found in {recipe_path}")
         for ing in recipe["ingredients"]:
             needed_ingredients.add(ing["item"])
-            # 根据食材状态推断需要的工作站
+            # Infer required workstations based on ingredient states
             if ing["state"] == "chopped":
                 needed_workstations.add("chopping_board")
             elif ing["state"] == "cooked":
@@ -29,14 +30,14 @@ def get_stations_from_orders(orders, recipe_dir, num_chopping_board=1, num_each_
                 needed_workstations.add("stove")
                 if "cookware" in ing:
                     needed_cookware.add(ing["cookware"])
-            # 其他状态可扩展
-    # 生成分配器
+            
+    # Dispenser for each ingredient
     stations = []
     dispenser_count = 1
     for ing in needed_ingredients:
         stations.append({"name": f"dispenser{dispenser_count}", "provides": ing})
         dispenser_count += 1
-    # 生成工作站
+
     for ws in needed_workstations:
         if ws == "chopping_board":
             for i in range(num_chopping_board):
@@ -47,7 +48,6 @@ def get_stations_from_orders(orders, recipe_dir, num_chopping_board=1, num_each_
                 for i in range(num_each_cookware):
                     stations.append({"name": f"stove{stove_count}", "item": cw})
                     stove_count += 1
-    # 固定添加窗口、洗碗池、盘子回收
     stations += [
         {"name": "serving_window"},
         {"name": "sink"},
@@ -56,14 +56,13 @@ def get_stations_from_orders(orders, recipe_dir, num_chopping_board=1, num_each_
     return stations
 
 def check_reachability(map_data):
-    # 通过 bfs 检查所有 agent 是否可以到达所有工作站相邻四格中的至少一个
-    from collections import deque
+    # Check if all agents can reach all workstations
     width = map_data["width"]
     height = map_data["height"]
     grid = [[0]*width for _ in range(height)]
     for tile in map_data["tiles"]:
         x, y = tile["x"], tile["y"]
-        # 工作站和障碍物都视为不可通行
+        # Both workstations and obstacles are considered impassable
         if tile["type"] == "obstacle" or tile["type"] == "station":
             grid[y][x] = 1
     directions = [(-1,0),(1,0),(0,-1),(0,1)]
@@ -86,7 +85,7 @@ def check_reachability(map_data):
         for tile in map_data["tiles"]:
             if tile["type"] == "station":
                 pos = (tile["x"], tile["y"])
-                # 检查工作站四个方向是否有可达位置
+                # Check if there's at least one adjacent reachable cell
                 can_reach = False
                 for dx, dy in directions:
                     adj = (pos[0]+dx, pos[1]+dy)
@@ -103,10 +102,9 @@ def generate_random_map(width=8, height=6, num_agents=2, orders=None, recipe_dir
     if seed is not None:
         random.seed(seed)
     tiles = []
-    # 边缘位置
+
     edge_positions = [(x, y) for x in range(width) for y in range(height)
                       if x == 0 or x == width-1 or y == 0 or y == height-1]
-    # 中间位置
     center_positions = [(x, y) for x in range(1, width-1) for y in range(1, height-1)]
 
     random.shuffle(edge_positions)
@@ -114,7 +112,7 @@ def generate_random_map(width=8, height=6, num_agents=2, orders=None, recipe_dir
 
     stations = get_stations_from_orders(orders, recipe_dir, num_chopping_board, num_each_cookware)
     pos_idx = 0
-    # 工作站优先放边缘
+    # Stations first placed on the edges
     for station in stations:
         if pos_idx < len(edge_positions):
             pos = edge_positions[pos_idx]
@@ -124,7 +122,7 @@ def generate_random_map(width=8, height=6, num_agents=2, orders=None, recipe_dir
         tile = {"x": pos[0], "y": pos[1], "type": "station", **station}
         tiles.append(tile)
 
-    # 桌子优先放中间
+    # Tables and plates prioritized in the center
     if num_tables is None:
         num_tables = random.randint(2, 6)
     if num_plates is None:
@@ -139,7 +137,7 @@ def generate_random_map(width=8, height=6, num_agents=2, orders=None, recipe_dir
             table["item"] = "plate"
         tiles.append(table)
 
-    # 随机放障碍物
+    # Walls placed randomly
     for i in range(num_walls):
         if pos_idx + i < len(center_positions):
             pos = center_positions[pos_idx + i]
@@ -149,7 +147,7 @@ def generate_random_map(width=8, height=6, num_agents=2, orders=None, recipe_dir
         tiles.append(wall)
     pos_idx += num_walls
 
-    # agent 随机放在剩余空位
+    # agent placed randomly in remaining positions
     used_positions = {(tile["x"], tile["y"]) for tile in tiles}
     available_positions = [p for p in center_positions + edge_positions if p not in used_positions]
     agent_positions = random.sample(available_positions, num_agents)
@@ -165,7 +163,7 @@ def generate_random_map(width=8, height=6, num_agents=2, orders=None, recipe_dir
     return map_data
 
 if __name__ == "__main__":
-    # 测试生成随机地图
+    # Test the map generation and reachability check
     retry_count = 0
     map_data = None
     while retry_count < 5:
@@ -180,7 +178,7 @@ if __name__ == "__main__":
             num_walls=2,
             seed=42
         )
-        print_map(map_data)
+        print_map_ascii(map_data)
         if check_reachability(map_data):
             break
         map_data = None

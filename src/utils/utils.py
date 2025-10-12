@@ -19,16 +19,16 @@ def get_model(model_name):
         return GPTWrapper(name=model_name)
 
 def clean_text(text: str) -> str:
-    # 移除提取 json 会报错的字符
+    # Remove characters that cause errors when extracting JSON
     text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
 def extract_json(text: str) -> dict|list:
     # json_regex = f'```json\s*([\s\S]*?)\s*```'
-    # 去除 <think> 和 </think> 标签以及其中的内容
+    # Remove <think> and </think> tags and their content
     text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
-    # 去除每行中 // 及其后的内容
+    # Remove // comments from each line
     text = re.sub(r'//.*', '', text)
 
     json_regex = r'```json\s*([\s\S]*?)\s*```'
@@ -53,12 +53,8 @@ def extract_json(text: str) -> dict|list:
             return parsed_json
         else:
             raise ValueError(f"No JSON data found in the string: \033[38;5;214m{text}\033[0m")
-            
-# 将地图打印为字符画
-# def print_map(map_data):
 
 def print_map_ascii(map_data):
-    # 地图字符画
     width = map_data["width"]
     height = map_data["height"]
     grid = [['   ']*width for _ in range(height)]
@@ -66,7 +62,7 @@ def print_map_ascii(map_data):
         x, y = tile["x"], tile["y"]
         ttype = tile["type"]
         if ttype == "obstacle":
-            grid[y][x] = '███'  # 墙体
+            grid[y][x] = '███'  # Wall
         elif ttype == "station":
             name = tile.get("name", "?")
             if "provides" in tile:
@@ -77,7 +73,6 @@ def print_map_ascii(map_data):
                 grid[y][x] = f"D({food})"
             elif "item" in tile:
                 item = tile["item"]
-                # 兼容 item 为 dict 或 str
                 if isinstance(item, dict):
                     item_name = item.get("name", "?")
                 elif isinstance(item, str):
@@ -170,7 +165,6 @@ def get_map_legend(map_data):
             detail.append(f"Dispenser for: {', '.join(map(str, provides_list))}")
         item = tile.get("item", None)
         if item is not None:
-            # 兼容 dict、str、None
             if isinstance(item, dict):
                 item_name = item.get("name", "?")
                 abbr = {
@@ -196,14 +190,12 @@ def get_map_legend(map_data):
                     break
             else:
                 abbr = str(name)[:3].upper()
-        # 展示所有字段
         for k, v in tile.items():
             if k in ("name", "x", "y", "type", "provides", "item"):
                 continue
             detail.append(f"{k}: {dict_to_str(v)}")
         legend_lines.append(f"  ({x},{y}) {abbr}: {name} | " + ' | '.join(detail))
 
-    # 输出 agent 信息
     legend_lines.append("\nAgent Info:")
     for idx, agent in enumerate(map_data.get("agents", []), 1):
         agent_str = dict_to_str(agent)
@@ -240,13 +232,13 @@ def draw_map_image(map_data):
 
     from matplotlib.patches import Rectangle
     station_colors = {
-        'dispenser': '#A3E635',      # 绿色
-        'chopping_board': '#FBBF24', # 黄色
-        'stove': '#F87171',          # 红色
-        'sink': '#60A5FA',           # 蓝色
-        'serving_window': '#A78BFA', # 紫色
-        'table': "#979797",          # 灰白
-        'plate_return': '#34D399',   # 青色
+        'dispenser': '#A3E635',      # Green
+        'chopping_board': '#FBBF24', # Yellow
+        'stove': '#F87171',          # Red
+        'sink': '#60A5FA',           # Blue
+        'serving_window': '#A78BFA', # Purple
+        'table': "#979797",          # Gray
+        'plate_return': '#34D399',   # Teal
     }
     for tile in map_data["tiles"]:
         x, y = tile["x"], tile["y"]
@@ -255,7 +247,7 @@ def draw_map_image(map_data):
             ax.add_patch(Rectangle((x, y), 1, 1, color='black'))
         elif ttype == "station":
             name = tile.get("name", "?")
-            color = '#93C5FD' # 默认浅蓝
+            color = '#93C5FD' # Default light blue
             label = name[:2]
             if "item" in tile:
                 item = tile["item"]

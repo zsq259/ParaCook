@@ -2,7 +2,6 @@
 
 from src.agent.model.model import Model
 from src.agent.method.agent import Agent
-from src.game.world_state import World
 from src.game.simulator import Simulator
 from src.utils.logger_config import logger, COLOR_CODES, RESET
 
@@ -14,87 +13,61 @@ class FixedAgent(Agent):
         if orders == ["burger_basic"] and map_name == "kitchen_burger_8x6":
             return {
                     "agent1": [
-                        # 任务：获取面包并组装汉堡
-                        {"action": "MoveTo", "target": [1, 1]},         # 移动到面包分配器旁边，耗时3，当前时间3
-                        {"action": "Interact", "target": "dispenser1"}, # 从分配器获取面包，耗时0，当前时间3
-                        {"action": "MoveTo", "target": [3, 4]},         # 移动到有盘子的桌子旁，耗时4，当前时间7
-                        {"action": "Interact", "target": "table1"},     # 将面包放入桌上的盘子，耗时0，当前时间7
+                        # Task: Get bread and assemble burger
+                        {"action": "MoveTo", "target": [1, 1]},         # Move to bread dispenser, cost 3, current time 3
+                        {"action": "Interact", "target": "dispenser1"}, # Get bread from dispenser, cost 0, current time 3
+                        {"action": "MoveTo", "target": [3, 4]},         # Move to table with plate, cost 4, current time 7
+                        {"action": "Interact", "target": "table1"},     # Put bread on plate on table, cost 0, current time 7
                     ],
                     "agent2": [
-                        # 任务：获取肉并煎熟
-                        {"action": "MoveTo", "target": [2, 1]},         # 移动到肉分配器旁边，耗时7，当前时间7
-                        {"action": "Interact", "target": "dispenser2"}, # 从分配器获取肉，耗时0，当前时间7
-                        {"action": "MoveTo", "target": [5, 1]},         # 移动到切菜台旁边，耗时3，当前时间10
-                        {"action": "Interact", "target": "chopping_board1"}, # 将肉放到切菜台上，耗时0，当前时间10
-                        {"action": "Process", "target": "chopping_board1"},  # 切肉，耗时4，当前时间14
-                        {"action": "Interact", "target": "chopping_board1"}, # 拿起切好的肉，耗时0，当前时间14
-                        {"action": "MoveTo", "target": [5, 4]},         # 移动到炉灶旁边，耗时3，当前时间17
-                        {"action": "Interact", "target": "stove"},      # 将肉放入锅中，耗时0，当前时间17，煎肉时间24，预计完成时间41
-                        {"action": "MoveTo", "target": [3, 4]},         # 移动到有盘子的桌子旁，耗时2，当前时间19
-                        {"action": "Interact", "target": "table1"},     # 拿起装有面包的盘子，耗时0，当前时间19
-                        {"action": "MoveTo", "target": [5, 4]},         # 移动到炉灶旁边，耗时2，当前时间21，此时肉还在煎
-                        {"action": "Wait", "duration": 20},             # 等待20时间单位，当前时间41
-                        {"action": "Interact", "target": "stove"},      # 将煎好的肉放入盘子，耗时0，当前时间41
-                        {"action": "MoveTo", "target": [4, 4]},         # 移动到上菜窗口旁，耗时1，当前时间42
-                        {"action": "Interact", "target": "serving_window"}, # 上菜，耗时0，当前时间42
+                        # Task: Get meat and cook it
+                        {"action": "MoveTo", "target": [2, 1]},         # Move to meat dispenser, cost 7, current time 7
+                        {"action": "Interact", "target": "dispenser2"}, # Get meat from dispenser, cost 0, current time 7
+                        {"action": "MoveTo", "target": [5, 1]},         # Move to chopping board, cost 3, current time 10
+                        {"action": "Interact", "target": "chopping_board1"}, # Put meat on chopping board, cost 0, current time 10
+                        {"action": "Process", "target": "chopping_board1"},  # Chop meat, cost 4, current time 14
+                        {"action": "Interact", "target": "chopping_board1"}, # Pick up chopped meat, cost 0, current time 14
+                        {"action": "MoveTo", "target": [5, 4]},         # Move to stove, cost 3, current time 17
+                        {"action": "Interact", "target": "stove"},      # Put meat in pan, cost 0, current time 17, frying time 24, expected finish time 41
+                        {"action": "MoveTo", "target": [3, 4]},         # Move to table with plate, cost 2, current time 19
+                        {"action": "Interact", "target": "table1"},     # Pick up plate with bread, cost 0, current time 19
+                        {"action": "MoveTo", "target": [5, 4]},         # Move to stove, cost 2, current time 21, meat still frying
+                        {"action": "Wait", "duration": 20},             # Wait 20 time units, current time 41
+                        {"action": "Interact", "target": "stove"},      # Put cooked meat on plate, cost 0, current time 41
+                        {"action": "MoveTo", "target": [4, 4]},         # Move to serving window, cost 1, current time 42
+                        {"action": "Interact", "target": "serving_window"}, # Serve, cost 0, current time 42
                     ]
                 }
         elif orders == ["salad_advanced"] and map_name == "kitchen_salad_8x6":
             return {
-        "agent1": [
-            {"action": "MoveTo", "target": [1, 1]},
-            {"action": "Interact", "target": "dispenser1"},
-            {"action": "MoveTo", "target": [3, 1]},
-            {"action": "Interact", "target": "chopping_board1"},
-            {"action": "Process", "target": "chopping_board1"},
-            {"action": "Interact", "target": "chopping_board1"},
-            {"action": "MoveTo", "target": [5, 1]},
-            {"action": "Interact", "target": "table1"},
-            {"action": "Interact", "target": "table1"},
-            {"action": "MoveTo", "target": [4, 1]},
-            {"action": "Wait", "duration": 1},
-            {"action": "Interact", "target": "chopping_board2"},
-            {"action": "MoveTo", "target": [6, 1]},
-            {"action": "Interact", "target": "serving_window"},
-            {"action": "Finish"}
-        ],
-        "agent2": [
-            {"action": "MoveTo", "target": [2, 1]},
-            {"action": "Interact", "target": "dispenser2"},
-            {"action": "MoveTo", "target": [4, 1]},
-            {"action": "Interact", "target": "chopping_board2"},
-            {"action": "Process", "target": "chopping_board2"},
-        ]
-    }
-            return {
                     "agent1": [
-                        # 任务：获取生菜并切碎
-                        {"action": "MoveTo", "target": [1, 1]},        # 移动到生菜分配器旁边，耗时3，当前时间3
-                        {"action": "Interact", "target": "dispenser1"},  # 从分配器获取生菜，耗时0，当前时间3
-                        {"action": "MoveTo", "target": [3, 1]},        # 移动到切菜台1旁边，耗时2，当前时间5
-                        {"action": "Interact", "target": "chopping_board1"},   # 将生菜放到切菜台1上，耗时0，当前时间5
-                        {"action": "Process", "target": "chopping_board1"},    # 切生菜，耗时4，当前时间9
-                        {"action": "Interact", "target": "chopping_board1"},   # 拿起切好的生菜，耗时0，当前时间9
+                        # Task: Get lettuce and chop it
+                        {"action": "MoveTo", "target": [1, 1]},        # Move to lettuce dispenser, cost 3, current time 3
+                        {"action": "Interact", "target": "dispenser1"},  # Get lettuce from dispenser, cost 0, current time 3
+                        {"action": "MoveTo", "target": [3, 1]},        # Move to chopping board 1, cost 2, current time 5
+                        {"action": "Interact", "target": "chopping_board1"},   # Put lettuce on chopping board 1, cost 0, current time 5
+                        {"action": "Process", "target": "chopping_board1"},    # Chop lettuce, cost 4, current time 9
+                        {"action": "Interact", "target": "chopping_board1"},   # Pick up chopped lettuce, cost 0, current time 9
                         
-                        # 组装沙拉
-                        {"action": "MoveTo", "target": [5, 1]},        # 移动到有盘子的桌子旁，耗时2，当前时间11
-                        {"action": "Interact", "target": "table1"},       # 将手上的生菜放入桌上的盘子，耗时0，当前时间11
-                        {"action": "Interact", "target": "table1"},      # 拿起盘子，耗时0，当前时间11
-                        {"action": "MoveTo", "target": [4, 1]},        # 移动到切菜台2旁，耗时1，当前时间12
-                        {"action": "Wait", "duration": 1},             # 等待1时间单位，等待agent2切好番茄，当前时间13
-                        {"action": "Interact", "target": "chopping_board2"},   # 将切好的番茄放入盘子，耗时0，当前时间13
+                        # Assemble salad
+                        {"action": "MoveTo", "target": [5, 1]},        # Move to table with plate, cost 2, current time 11
+                        {"action": "Interact", "target": "table1"},       # Put lettuce in plate on table, cost 0, current time 11
+                        {"action": "Interact", "target": "table1"},      # Pick up plate, cost 0, current time 11
+                        {"action": "MoveTo", "target": [4, 1]},        # Move to chopping board 2, cost 1, current time 12
+                        {"action": "Wait", "duration": 1},             # Wait 1 time unit for agent2 to chop tomato, current time 13
+                        {"action": "Interact", "target": "chopping_board2"},   # Put chopped tomato in plate, cost 0, current time 13
 
-                        # 上菜
-                        {"action": "MoveTo", "target": [6, 1]},        # 移动到上菜窗口旁，耗时2，当前时间15
-                        {"action": "Interact", "target": "serving_window"},     # 上菜，耗时0，当前时间15
+                        # Serve
+                        {"action": "MoveTo", "target": [6, 1]},        # Move to serving window, cost 2, current time 15
+                        {"action": "Interact", "target": "serving_window"},     # Serve, cost 0, current time 15
                     ],
                     "agent2": [
-                        # 任务：获取番茄并切碎
-                        {"action": "MoveTo", "target": [2, 1]},        # 移动到番茄分配器旁边，耗时7，当前时间7
-                        {"action": "Interact", "target": "dispenser2"},   # 从分配器获取番茄，耗时0，当前时间7
-                        {"action": "MoveTo", "target": [4, 1]},        # 移动到切菜台2旁边，耗时2，当前时间9
-                        {"action": "Interact", "target": "chopping_board2"},   # 将番茄放到切菜台2上，耗时0，当前时间9
-                        {"action": "Process", "target": "chopping_board2"},    # 切番茄，耗时4，当前时间13
+                        # Task: Get tomato and chop it
+                        {"action": "MoveTo", "target": [2, 1]},        # Move to tomato dispenser, cost 7, current time 7
+                        {"action": "Interact", "target": "dispenser2"},   # Get tomato from dispenser, cost 0, current time 7
+                        {"action": "MoveTo", "target": [4, 1]},        # Move to chopping board 2, cost 2, current time 9
+                        {"action": "Interact", "target": "chopping_board2"},   # Put tomato on chopping board 2, cost 0, current time 9
+                        {"action": "Process", "target": "chopping_board2"},    # Chop tomato, cost 4, current time 13
                     ]
                 }
         elif orders == ["salad_advanced", "salad_advanced"] and map_name == "kitchen_salad_8x6":
@@ -162,75 +135,33 @@ class FixedAgent(Agent):
         elif orders == ["sushi_fish"] and map_name == "kitchen_sushi_8x6":
             return {
                 "agent1": [
-                    {"action": "MoveTo", "target": [1, 1]},
-                    {"action": "Interact", "target": "dispenser1"},
-                    {"action": "MoveTo", "target": [5, 1]},
-                    {"action": "Interact", "target": "chopping_board1"},
-                    {"action": "Process", "target": "chopping_board1"},
-                    {"action": "Interact", "target": "chopping_board1"},
-                    {"action": "MoveTo", "target": [6, 4]},
-                    {"action": "Interact", "target": "table3"},
-                    {"action": "MoveTo", "target": [4, 1]},
-                    {"action": "Interact", "target": "dispenser4"},
-                    {"action": "MoveTo", "target": [6, 4]},
-                    {"action": "Interact", "target": "table3"},
-                    {"action": "Finish"}
+                    # Task: Get fish and chop it
+                    {"action": "MoveTo", "target": [1, 1]},         # Move to fish dispenser, cost 3, current time 3
+                    {"action": "Interact", "target": "dispenser1"}, # Get fish from dispenser, cost 0, current time 3
+                    {"action": "MoveTo", "target": [5, 1]},         # Move to chopping board, cost 2, current time 5
+                    {"action": "Interact", "target": "chopping_board1"}, # Put fish on chopping board, cost 0, current time 5
+                    {"action": "Process", "target": "chopping_board1"},  # Chop fish, cost 4, current time 9
+                    {"action": "Interact", "target": "chopping_board1"}, # Pick up chopped fish, cost 0, current time 9
+                    {"action": "MoveTo", "target": [3, 4]},         # Move to table with plate, cost 2, current time 11
+                    {"action": "Interact", "target": "table1"},     # Put chopped fish on plate, cost 0, current time 11
                 ],
                 "agent2": [
-                    {"action": "MoveTo", "target": [5, 4]},
-                    {"action": "Interact", "target": "stove"},
-                    {"action": "MoveTo", "target": [6, 4]},
-                    {"action": "Interact", "target": "table3"},
-                    {"action": "MoveTo", "target": [3, 1]},
-                    {"action": "Interact", "target": "dispenser3"},
-                    {"action": "MoveTo", "target": [6, 4]},
-                    {"action": "Interact", "target": "table3"},
-                    {"action": "Interact", "target": "table3"},
-                    {"action": "MoveTo", "target": [5, 4]},
-                    {"action": "Interact", "target": "stove"},
-                    {"action": "MoveTo", "target": [3, 4]},
-                    {"action": "Interact", "target": "table1"},
-                    {"action": "MoveTo", "target": [6, 4]},
-                    {"action": "Interact", "target": "table3"},
-                    {"action": "Wait", "duration": 5},
-                    {"action": "Interact", "target": "table3"},
-                    {"action": "Wait", "duration": 6},
-                    {"action": "MoveTo", "target": [5, 4]},
-                    {"action": "Interact", "target": "stove"},
-                    {"action": "MoveTo", "target": [4, 4]},
-                    {"action": "Interact", "target": "serving_window"},
-                    {"action": "Finish"}
-                ]
-            }
-            {
-                "agent1": [
-                    # 任务：获取鱼并切碎
-                    {"action": "MoveTo", "target": [1, 1]},         # 移动到鱼分配器旁边，耗时3，当前时间3
-                    {"action": "Interact", "target": "dispenser1"}, # 从分配器获取鱼，耗时0，当前时间3
-                    {"action": "MoveTo", "target": [5, 1]},         # 移动到切菜台旁边，耗时2，当前时间5
-                    {"action": "Interact", "target": "chopping_board1"}, # 将鱼放到切菜台上，耗时0，当前时间5
-                    {"action": "Process", "target": "chopping_board1"},  # 切鱼，耗时4，当前时间9
-                    {"action": "Interact", "target": "chopping_board1"}, # 拿起切好的鱼，耗时0，当前时间9
-                    {"action": "MoveTo", "target": [3, 4]},         # 移动到有盘子的桌子旁，耗时2，当前时间11
-                    {"action": "Interact", "target": "table1"},     # 将切好的鱼放入盘子，耗时0，当前时间11
-                ],
-                "agent2": [
-                    # 任务：煮米饭并准备紫菜
-                    {"action": "MoveTo", "target": [3, 1]},         # 移动到米饭分配器旁边，耗时7，当前时间7
-                    {"action": "Interact", "target": "dispenser3"}, # 从分配器获取米饭，耗时0，当前时间7
-                    {"action": "MoveTo", "target": [5, 4]},         # 移动到锅旁边，耗时6，当前时间13
-                    {"action": "Interact", "target": "stove"},      # 将米饭放入锅中，耗时0，当前时间13，煮饭时间16，预计完成时间29
-                    {"action": "MoveTo", "target": [4, 1]},         # 移动到紫菜分配器旁边，耗时1，当前时间14
-                    {"action": "Interact", "target": "dispenser4"}, # 获取紫菜，耗时0，当前时间14
-                    {"action": "MoveTo", "target": [3, 4]},         # 移动到有盘子的桌子旁，耗时4，当前时间18
-                    {"action": "Interact", "target": "table1"},     # 将紫菜放入盘子，耗时0，当前时间18
-                    {"action": "Interact", "target": "table1"},     # 拿起装有紫菜和鱼的盘子，耗时0，当前时间18
-                    {"action": "MoveTo", "target": [5, 4]},         # 移动到锅旁边，耗时3，当前时间21，此时米饭还未煮好
-                    {"action": "Wait", "duration": 8},              # 等待8时间单位，当前时间29
-                    {"action": "Interact", "target": "stove"},      # 将煮好的米饭放入盘子，耗时0，当前时间29
-                    # 上菜
-                    {"action": "MoveTo", "target": [4, 4]},         # 移动到上菜窗口旁，耗时1，当前时间30
-                    {"action": "Interact", "target": "serving_window"}, # 上菜，耗时0，当前时间30
+                    # Task: Cook rice and prepare seaweed
+                    {"action": "MoveTo", "target": [3, 1]},         # Move to rice dispenser, cost 7, current time 7
+                    {"action": "Interact", "target": "dispenser3"}, # Get rice from dispenser, cost 0, current time 7
+                    {"action": "MoveTo", "target": [5, 4]},         # Move to pot, cost 6, current time 13
+                    {"action": "Interact", "target": "stove"},      # Put rice in pot, cost 0, current time 13, cooking time 16, expected finish time 29
+                    {"action": "MoveTo", "target": [4, 1]},         # Move to seaweed dispenser, cost 1, current time 14
+                    {"action": "Interact", "target": "dispenser4"}, # Get seaweed, cost 0, current time 14
+                    {"action": "MoveTo", "target": [3, 4]},         # Move to table with plate, cost 4, current time 18
+                    {"action": "Interact", "target": "table1"},     # Put seaweed on plate, cost 0, current time 18
+                    {"action": "Interact", "target": "table1"},     # Pick up plate with seaweed and fish, cost 0, current time 18
+                    {"action": "MoveTo", "target": [5, 4]},         # Move to pot, cost 3, current time 21, rice not ready yet
+                    {"action": "Wait", "duration": 8},              # Wait 8 time units, current time 29
+                    {"action": "Interact", "target": "stove"},      # Put cooked rice on plate, cost 0, current time 29
+                    # Serve
+                    {"action": "MoveTo", "target": [4, 4]},         # Move to serving window, cost 1, current time 30
+                    {"action": "Interact", "target": "serving_window"}, # Serve, cost 0, current time 30
                 ]
             }
         elif orders == ["pasta_mushroom", "pasta_tomato"] and map_name == "kitchen":

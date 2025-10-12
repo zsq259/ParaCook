@@ -2,7 +2,6 @@ import json
 import os
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-import numpy as np
 from src.analysis.compute_sequencial_time import compute_order_time_and_movements, get_dish_time_and_movements
 
 def collect_data_by_group(
@@ -72,7 +71,7 @@ def collect_data_by_group(
                                         all_time.append(sequencial_time)
                                         for name, time in data["agent_moving_time"].items():
                                             agent_movements.append(sequencial_movements / agent_num)
-                # 计算均值
+
                 success_rate = success_count / all_count if all_count > 0 else 0
                 avg_time = sum(all_time) / len(all_time) if len(all_time) > 0 else 0
                 avg_time_rate = sum(all_time_rate) / len(all_time_rate) if len(all_time_rate) > 0 else 0

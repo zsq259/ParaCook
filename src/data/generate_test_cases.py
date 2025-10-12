@@ -1,4 +1,5 @@
-from src.utils.random_map import generate_random_map, print_map, load_json, check_reachability
+from src.utils.random_map import generate_random_map, load_json, check_reachability
+from src.utils.utils import print_map_ascii
 
 import os
 import random
@@ -53,7 +54,7 @@ def generate_maps(recipe, num_agents, output_dir, seed=None) -> bool:
             num_walls=2,
             seed=seed + retry_count if seed is not None else None
         )
-        print_map(map_data)
+        print_map_ascii(map_data)
         if check_reachability(map_data):
             break
         else:
@@ -71,8 +72,6 @@ def generate_maps(recipe, num_agents, output_dir, seed=None) -> bool:
 
 
 def main():
-    # 示例调用
-    # generate_test_cases(recipe="salad", num_agents=2, output_dir="data/cook", seed=41)
     seeds = [42, 84, 126, 128, 256]
     recipe_cates = ["sashimi", "salad", "sushi", "burger", "pasta", "burrito"]
     # recipe_cates = ["burger"]
