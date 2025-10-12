@@ -1,0 +1,102 @@
+[
+    {
+        "name": "subtask1",
+        "time": 2,
+        "dependencies": {}
+    },
+    {
+        "name": "subtask2",
+        "time": 15,
+        "dependencies": {
+            "subtask1": 0
+        }
+    },
+    {
+        "name": "subtask3",
+        "time": 4,
+        "dependencies": {
+            "subtask2": 0
+        }
+    },
+    {
+        "name": "subtask4",
+        "time": 8,
+        "dependencies": {
+            "subtask3": 0
+        }
+    },
+    {
+        "name": "subtask5",
+        "time": 6,
+        "dependencies": {}
+    },
+    {
+        "name": "subtask6",
+        "time": 16,
+        "dependencies": {
+            "subtask5": 0
+        }
+    },
+    {
+        "name": "subtask7",
+        "time": 4,
+        "dependencies": {
+            "subtask6": 0
+        }
+    },
+    {
+        "name": "subtask8",
+        "time": 16,
+        "dependencies": {
+            "subtask7": 0
+        }
+    },
+    {
+        "name": "subtask9",
+        "time": 8,
+        "dependencies": {}
+    },
+    {
+        "name": "subtask10",
+        "time": 6,
+        "dependencies": {
+            "subtask9": 0
+        }
+    },
+    {
+        "name": "subtask11",
+        "time": 4,
+        "dependencies": {
+            "subtask10": 0
+        }
+    },
+    {
+        "name": "subtask12",
+        "time": 5,
+        "dependencies": {
+            "subtask11": 0,
+            "subtask15": 0
+        }
+    },
+    {
+        "name": "subtask13",
+        "time": 16,
+        "dependencies": {
+            "subtask4": 10
+        }
+    },
+    {
+        "name": "subtask14",
+        "time": 3,
+        "dependencies": {
+            "subtask13": 0
+        }
+    },
+    {
+        "name": "subtask15",
+        "time": 6,
+        "dependencies": {
+            "subtask14": 0
+        }
+    }
+]

@@ -1,0 +1,48 @@
+[
+    {
+        "name": "subtask1",
+        "time": 8,
+        "dependencies": {}
+    },
+    {
+        "name": "subtask2",
+        "time": 13,
+        "dependencies": {
+            "subtask1": 0
+        }
+    },
+    {
+        "name": "subtask3",
+        "time": 17,
+        "dependencies": {}
+    },
+    {
+        "name": "subtask4",
+        "time": 12,
+        "dependencies": {
+            "subtask3": 0
+        }
+    },
+    {
+        "name": "subtask5",
+        "time": 4,
+        "dependencies": {
+            "subtask4": 0
+        }
+    },
+    {
+        "name": "subtask6",
+        "time": 5,
+        "dependencies": {
+            "subtask5": 0
+        }
+    },
+    {
+        "name": "subtask7",
+        "time": 32,
+        "dependencies": {
+            "subtask2": 16,
+            "subtask6": 24
+        }
+    }
+]

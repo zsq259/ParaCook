@@ -1,0 +1,28 @@
+[
+    {
+        "name": "subtask1",
+        "time": 4,
+        "dependencies": {}
+    },
+    {
+        "name": "subtask2",
+        "time": 1,
+        "dependencies": {
+            "subtask1": 0
+        }
+    },
+    {
+        "name": "subtask3",
+        "time": 4,
+        "dependencies": {
+            "subtask2": 0
+        }
+    },
+    {
+        "name": "subtask4",
+        "time": 9,
+        "dependencies": {
+            "subtask3": 0
+        }
+    }
+]
