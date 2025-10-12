@@ -35,7 +35,8 @@ handler.setFormatter(formatter)
 if not os.path.exists('tmp'):
     os.makedirs('tmp')
 if os.path.exists('tmp/log.txt'):
-    os.remove('tmp/log.txt')
+    with open('tmp/log.txt', 'w', encoding='utf-8') as f:
+        f.write("")  # clear the file if it exists
 file_handler = logging.FileHandler('tmp/log.txt', encoding='utf-8')
 file_handler.setFormatter(formatter)
 
