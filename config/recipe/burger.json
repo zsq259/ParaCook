@@ -1,7 +1,7 @@
 [
     {
         "name": "burger_basic",
-        "recipe": "First chop the meat and cook it. Then put the cooked meat with a piece of bread on a plate to make a basic burger.",
+        "recipe": "First chop the meat and cook it in pan. Then put the cooked meat with a piece of bread on a plate to make a basic burger.",
         "ingredients": [
             {
                 "item": "bread",
@@ -15,7 +15,7 @@
     },
     {
         "name": "burger_lettuce",
-        "recipe": "Chop the meat and cook it. Chop the lettuce. Then put the cooked meat, chopped lettuce with a piece of bread on a plate to make a burger with lettuce.",
+        "recipe": "Chop the meat and cook it in pan. Chop the lettuce. Then put the cooked meat, chopped lettuce with a piece of bread on a plate to make a burger with lettuce.",
         "ingredients": [
             {
                 "item": "bread",
@@ -33,7 +33,7 @@
     },
     {
         "name": "burger_full",
-        "recipe": "Chop the meat and cook it. Chop the lettuce and tomato. Then put the cooked meat, chopped lettuce, chopped tomato with a piece of bread on a plate to make a full burger.",
+        "recipe": "Chop the meat and cook it in pan. Chop the lettuce and tomato. Then put the cooked meat, chopped lettuce, chopped tomato with a piece of bread on a plate to make a full burger.",
         "ingredients": [
             {
                 "item": "bread",
@@ -55,7 +55,7 @@
     },
     {
         "name": "burger_cheese",
-        "recipe": "Chop the meat and cook it. Then put the cooked meat with a piece of bread and a slice of cheese on a plate to make a burger with cheese.",
+        "recipe": "Chop the meat and cook it in pan. Then put the cooked meat with a piece of bread and a slice of cheese on a plate to make a burger with cheese.",
         "ingredients": [
             {
                 "item": "bread",
@@ -74,7 +74,7 @@
     },
     {
         "name": "burger_cheese_lettuce",
-        "recipe": "Chop the meat and cook it. Chop the lettuce. Then put the cooked meat, chopped lettuce with a piece of bread and a slice of cheese on a plate to make a burger with cheese and lettuce.",
+        "recipe": "Chop the meat and cook it in pan. Chop the lettuce. Then put the cooked meat, chopped lettuce with a piece of bread and a slice of cheese on a plate to make a burger with cheese and lettuce.",
         "ingredients": [
             {
                 "item": "bread",
