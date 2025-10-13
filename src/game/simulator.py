@@ -1,9 +1,8 @@
 # simulator.py - Action Scheduling System
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List
 from heapq import heappop, heappush
 
-from regex import E
 
 from src.game.world_state import World
 from src.game.object import *
@@ -189,7 +188,7 @@ class Simulator:
         logger.info("=== Starting Simulation ===")
         logger.info(f"Initial state:")
         logger.info(self.status())
-        logger.info(self.world.to_json())
+        # logger.info(self.world.to_json())
 
         while self.event_queue:
             try:
@@ -253,7 +252,7 @@ class Simulator:
         
         logger.info(f"{COLOR_CODES['PURPLE']}Observation:{RESET}")
         logger.info(self.status())
-        logger.info(self.world.to_json())
+        # logger.info(self.world.to_json())
 
         return have_agent_finished
     

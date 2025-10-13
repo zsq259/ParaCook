@@ -182,7 +182,7 @@ class FixedAgent(Agent):
                     {"action": "MoveTo", "target": [2, 1]},
                     {"action": "Interact", "target": "stove3"},
                     {"action": "MoveTo", "target": [2, 6]},
-                    {"action": "Interact", "target": "serving_window"},
+                    {"action": "Interact", "target": "serving_window"}
                 ],
                 "agent2": [
                     {"action": "Interact", "target": "dispenser5"},
@@ -207,7 +207,7 @@ class FixedAgent(Agent):
                     {"action": "MoveTo", "target": [8, 4]},
                     {"action": "Interact", "target": "stove1"},
                     {"action": "MoveTo", "target": [2, 6]},
-                    {"action": "Interact", "target": "serving_window"},
+                    {"action": "Interact", "target": "serving_window"}
                 ]
             }
         else:
