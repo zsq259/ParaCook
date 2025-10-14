@@ -155,11 +155,13 @@ class HumanAgent(Agent):
         server_path = os.path.join(os.path.dirname(__file__), '../../../../gui/server/main.py')
         server_path = os.path.abspath(server_path)
         
-        # logger.info(f"Starting API server: {server_path}")
+
+        output = subprocess.STDOUT if os.environ.get("DEBUG") else subprocess.DEVNULL
+
         server_proc = subprocess.Popen(
             [sys.executable, server_path],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stdout=output,
+            stderr=output,
         )
         
         # 等待服务器启动
@@ -167,7 +169,6 @@ class HumanAgent(Agent):
             server_proc.terminate()
             raise RuntimeError("Failed to start API server")
         
-        time.sleep(3)
         # 启动日志转发
         self.start_log_forwarding()
         
@@ -180,14 +181,15 @@ class HumanAgent(Agent):
         web_path = os.path.abspath(web_path)
         
         logger.info("=" * 60)
+        logger.info(f"Starting API server: {server_path}")
         logger.info(f"Starting Vue.js web interface from: {web_path}")
         
         # 启动 npm run dev
         web_proc = subprocess.Popen(
             ['npm', 'run', 'dev'],
             cwd=web_path,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stdout=output,
+            stderr=output,
         )
         
         # 保存模拟器副本

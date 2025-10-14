@@ -28,7 +28,13 @@ pip install -r requirements.txt
 
 ## 🎮 GUI for Human Tests
 
-We provide a web-based GUI for human tests. 
+We provide a web-based GUI for human tests. Please follow the steps below to set up the environment.
+
+```bash
+cd gui/web
+npm install
+```
+
 Run the following command to start an example human test:
 
 ```bash
