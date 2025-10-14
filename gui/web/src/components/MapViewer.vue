@@ -93,25 +93,41 @@
             shadow="always"
           >
             <template #header>
-              <strong>{{ hoveredCell.data.name || 'Empty' }}</strong>
+              <strong>
+                {{ Array.isArray(hoveredCell.data) && hoveredCell.data.length > 1 
+                    ? `Multiple Agents (${hoveredCell.data.length})` 
+                    : (hoveredCell.data.name || hoveredCell.data[0]?.name || 'Empty') 
+                }}
+              </strong>
             </template>
             <div class="tooltip-content">
               <div><strong>Position:</strong> ({{ hoveredCell.x }}, {{ hoveredCell.y }})</div>
-              <div v-if="hoveredCell.data.type">
-                <strong>Type:</strong> {{ hoveredCell.data.type }}
-              </div>
-              <div v-if="hoveredCell.data.provides">
-                <strong>Provides:</strong> {{ hoveredCell.data.provides }}
-              </div>
-              <div v-if="hoveredCell.data.holding !== undefined">
-                <strong>Holding:</strong> {{ hoveredCell.data.holding || 'Nothing' }}
-              </div>
-              <div v-if="hoveredCell.data.item">
-                <strong>Item:</strong> {{ formatItem(hoveredCell.data.item) }}
-              </div>
-              <div v-if="hoveredCell.data.in_use">
-                <strong>In Use:</strong> {{ hoveredCell.data.current_user || 'Yes' }}
-              </div>
+              <template v-if="Array.isArray(hoveredCell.data) && hoveredCell.data.length > 0">
+                <div v-for="(agent, idx) in hoveredCell.data" :key="idx" class="agent-info">
+                  <el-divider v-if="idx > 0" style="margin: 8px 0" />
+                  <div><strong>Agent {{ idx + 1 }}:</strong> {{ agent.name }}</div>
+                  <div v-if="agent.holding !== undefined">
+                    <strong>Holding:</strong> {{ agent.holding || 'Nothing' }}
+                  </div>
+                </div>
+              </template>
+              <template v-else-if="hoveredCell.data && !Array.isArray(hoveredCell.data)">
+                <div v-if="hoveredCell.data.type">
+                  <strong>Type:</strong> {{ hoveredCell.data.type }}
+                </div>
+                <div v-if="hoveredCell.data.provides">
+                  <strong>Provides:</strong> {{ hoveredCell.data.provides }}
+                </div>
+                <div v-if="hoveredCell.data.holding !== undefined">
+                  <strong>Holding:</strong> {{ hoveredCell.data.holding || 'Nothing' }}
+                </div>
+                <div v-if="hoveredCell.data.item">
+                  <strong>Item:</strong> {{ formatItem(hoveredCell.data.item) }}
+                </div>
+                <div v-if="hoveredCell.data.in_use">
+                  <strong>In Use:</strong> {{ hoveredCell.data.current_user || 'Yes' }}
+                </div>
+              </template>
             </div>
           </el-card>
         </div>
@@ -272,22 +288,25 @@ const gridCells = computed(() => {
   const agentMap = {}
   agents.forEach(agent => {
     const key = `${agent.x},${agent.y}`
-    agentMap[key] = agent
+    if (!agentMap[key]) {
+      agentMap[key] = []
+    }
+    agentMap[key].push(agent)
   })
   
   // 生成所有格子（从上到下，从左到右）
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const key = `${x},${y}`
-      const agent = agentMap[key]
+      const agentsAtPos = agentMap[key] || []
       const tile = tileMap[key]
       
       cells.push({
         x,
         y,
-        agent,
+        agents: agentsAtPos,  // ✅ 改为 agents（复数）
         tile,
-        data: agent || tile || null
+        data: agentsAtPos.length > 0 ? agentsAtPos : (tile || null)
       })
     }
   }
@@ -297,7 +316,8 @@ const gridCells = computed(() => {
 
 // 获取格子的样式类
 const getCellClass = (cell) => {
-  if (cell.agent) return 'cell-agent'
+  if (cell.agents && cell.agents.length > 0) return 'cell-agent'
+  
   if (cell.tile) {
     if (cell.tile.type === 'obstacle') return 'cell-wall'
     if (cell.tile.name.includes('dispenser')) return 'cell-dispenser'
@@ -314,10 +334,11 @@ const getCellClass = (cell) => {
 
 // 获取格子显示的图片
 const getCellImage = (cell) => {
-  if (cell.agent) {
-    if (cell.agent.name.includes('1')) return agent1Img
-    if (cell.agent.name.includes('2')) return agent2Img
-    if (cell.agent.name.includes('3')) return agent3Img
+  if (cell.agents && cell.agents.length > 0) {
+    const agent = cell.agents[0]  // 取第一个 agent
+    if (agent.name.includes('1')) return agent1Img
+    if (agent.name.includes('2')) return agent2Img
+    if (agent.name.includes('3')) return agent3Img
     return agentImg
   }
   
@@ -447,6 +468,14 @@ defineExpose({
   justify-content: center;
   background: #f5f7fa;
   border-radius: 8px;
+}
+
+.agent-info {
+  padding: 4px 0;
+}
+
+.agent-info > div {
+  margin: 4px 0;
 }
 
 /* 带坐标轴的地图布局 */
