@@ -15,6 +15,9 @@ import requests
 from typing import Optional
 import threading
 import logging
+import asyncio
+import websockets
+from concurrent.futures import ThreadPoolExecutor
 
 config_path = "config/gui_config.json"
 with open(config_path, 'r') as f:
@@ -22,14 +25,23 @@ with open(config_path, 'r') as f:
 
 API_URL = f"http://{config['api']['host']}:{config['api']['port']}"
 WEB_URL = f"http://{config['web']['host']}:{config['web']['port']}"
+WS_URL = f"ws://{config['api']['host']}:{config['api']['port']}/ws/agent"
 
 class HumanAgent(Agent):
     def __init__(self, model: Model, api_url: str = API_URL):
         super().__init__(model)
         self.api_url = api_url
+        self.ws_url = WS_URL
         self.session = requests.Session()
         self.log_handler = None
         self.should_stop_logging = False
+        
+        # WebSocket 事件标志
+        self.execute_event = threading.Event()
+        self.reset_event = threading.Event()
+        self.current_actions = {}
+        self.ws_thread = None
+        self.ws_running = False
         
     def _call_api(self, method: str, endpoint: str, data: dict = {}, retries: int = 3) -> Optional[dict]:
         """调用 API 的辅助方法"""
@@ -80,7 +92,7 @@ class HumanAgent(Agent):
         """发送日志到服务器（保留原始 ANSI 颜色代码）"""
         data = {
             "level": level,
-            "message": message,  # 保留原始消息，包含 ANSI 代码
+            "message": message,
             "timestamp": time.strftime("%H:%M:%S")
         }
         self._call_api("POST", "/api/logs", data)
@@ -104,9 +116,9 @@ class HumanAgent(Agent):
                 except:
                     pass
         
-         # 创建并保存 handler 引用
+        # 创建并保存 handler 引用
         self.log_handler = LogForwarder(self)
-        self.log_handler.setLevel(logging.DEBUG)  # 捕获所有级别
+        self.log_handler.setLevel(logging.DEBUG)
         
         # 使用与文件日志相同的格式
         formatter = logging.Formatter('%(message)s')
@@ -138,21 +150,74 @@ class HumanAgent(Agent):
         logger.error(f"API server did not start within {timeout} seconds")
         return False
     
-    def check_should_execute(self) -> Optional[dict]:
-        """检查是否应该执行，并获取动作"""
-        result = self._call_api("GET", "/api/actions/should_execute")
-        if result and result.get("success") and result.get("should_execute"):
-            return result.get("data", {})
-        return None
-
-    def check_should_reset(self) -> bool:
-        """检查是否应该重置"""
-        result = self._call_api("GET", "/api/should_reset")
-        if result and result.get("success") and result.get("should_reset"):
-            # 确认重置
-            self._call_api("POST", "/api/reset/confirm")
-            return True
-        return False
+    def _run_websocket_loop(self):
+        """在独立线程中运行 WebSocket 连接"""
+        async def connect_and_listen():
+            retry_count = 0
+            max_retries = 5
+            
+            while self.ws_running and retry_count < max_retries:
+                try:
+                    logger.info(f"Connecting to WebSocket: {self.ws_url}")
+                    async with websockets.connect(self.ws_url) as websocket:
+                        logger.info("✅ WebSocket connected to agent endpoint")
+                        retry_count = 0  # 重置重试计数
+                        
+                        # 持续接收消息
+                        async for message in websocket:
+                            if not self.ws_running:
+                                break
+                                
+                            try:
+                                data = json.loads(message)
+                                msg_type = data.get('type')
+                                
+                                if msg_type == 'execute':
+                                    logger.info("📨 Received execute command via WebSocket")
+                                    self.current_actions = data.get('data', {})
+                                    self.execute_event.set()
+                                    
+                                elif msg_type == 'reset':
+                                    logger.info("📨 Received reset command via WebSocket")
+                                    self.reset_event.set()
+                                    
+                            except json.JSONDecodeError as e:
+                                logger.error(f"Failed to parse WebSocket message: {e}")
+                                
+                except websockets.exceptions.WebSocketException as e:
+                    if self.ws_running:
+                        retry_count += 1
+                        logger.warning(f"WebSocket connection lost, retrying ({retry_count}/{max_retries})...")
+                        await asyncio.sleep(2)
+                except Exception as e:
+                    if self.ws_running:
+                        logger.error(f"WebSocket error: {e}")
+                        await asyncio.sleep(2)
+            
+            if retry_count >= max_retries:
+                logger.error("WebSocket connection failed after maximum retries")
+        
+        # 创建新的事件循环并运行
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(connect_and_listen())
+        finally:
+            loop.close()
+    
+    def start_websocket(self):
+        """启动 WebSocket 连接"""
+        self.ws_running = True
+        self.ws_thread = threading.Thread(target=self._run_websocket_loop, daemon=True)
+        self.ws_thread.start()
+        logger.info("WebSocket connection thread started")
+    
+    def stop_websocket(self):
+        """停止 WebSocket 连接"""
+        self.ws_running = False
+        if self.ws_thread:
+            self.ws_thread.join(timeout=5)
+            logger.info("WebSocket connection stopped")
     
     def run_test(self, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
         """
@@ -162,7 +227,6 @@ class HumanAgent(Agent):
         server_path = os.path.join(os.path.dirname(__file__), '../../../../gui/server/main.py')
         server_path = os.path.abspath(server_path)
         
-
         output = sys.stdout if os.environ.get("DEBUG") else subprocess.DEVNULL
 
         server_proc = subprocess.Popen(
@@ -175,6 +239,10 @@ class HumanAgent(Agent):
         if not self.wait_for_server():
             server_proc.terminate()
             raise RuntimeError("Failed to start API server")
+        
+        # 启动 WebSocket 连接
+        self.start_websocket()
+        time.sleep(2)  # 给 WebSocket 一些时间建立连接
         
         # 启动日志转发
         self.start_log_forwarding()
@@ -206,17 +274,21 @@ class HumanAgent(Agent):
         try:
             logger.info("Human Agent Interface Started")
             logger.info(f"API Server: {self.api_url}")
+            logger.info(f"WebSocket: {self.ws_url}")
             logger.info(f"Web Interface: {WEB_URL}")
             logger.info("Press Ctrl+C to stop")
             logger.info("=" * 60)
 
             while True:
-                # 从服务器获取动作
+                # 检查前端进程
                 if web_proc.poll() is not None:
-                    print("Warning: Frontend process has stopped unexpectedly")
+                    logger.warning("Frontend process has stopped unexpectedly")
                     break
                 
-                if self.check_should_reset():
+                # 等待重置事件（非阻塞，超时 0.1 秒）
+                if self.reset_event.wait(timeout=0.1):
+                    self.reset_event.clear()
+                    
                     logger.info("=" * 60)
                     logger.info("🔄 Resetting simulator to initial state...")
                     logger.info("=" * 60)
@@ -231,9 +303,10 @@ class HumanAgent(Agent):
                     logger.info("Simulator reset complete")
                     continue
                 
-                actions = self.check_should_execute()
-
-                if actions:
+                # 等待执行事件（非阻塞，超时 0.1 秒）
+                if self.execute_event.wait(timeout=0.1):
+                    self.execute_event.clear()
+                    
                     # 清空日志
                     self.clear_logs()
                     logger.info("=" * 60)
@@ -243,10 +316,11 @@ class HumanAgent(Agent):
                     # 重新加载模拟器并执行
                     simulator = deepcopy(simulator_copy)
                     try:
-                        simulator.load_plan(actions)
+                        simulator.load_plan(self.current_actions)
                     except Exception as e:
                         logger.error(f"Failed to load actions: {e}")
-                        exit(1)
+                        continue
+                    
                     simulator.run_simulation()
                     # 更新世界状态
                     self.update_world_state(simulator)
@@ -262,10 +336,10 @@ class HumanAgent(Agent):
                         self.send_log("SUCCESS", "All orders completed successfully!")
                         self._call_api("POST", "/api/task/complete")
                         final_result = self.create_result(simulator, 0)
-                        time.sleep(3)  # 给用户时间查看
+                        time.sleep(3)
                         break
                 
-                time.sleep(1)
+                time.sleep(0.1)  # 短暂休眠，避免 CPU 占用过高
         
         except KeyboardInterrupt:
             logger.info("\n" + "=" * 60)
@@ -273,10 +347,14 @@ class HumanAgent(Agent):
             logger.info("=" * 60)
         
         finally:
-            # 清理进程
+            # 停止 WebSocket
+            self.stop_websocket()
+            
+            # 清理日志转发
             for handler in logger.handlers[:]:
                 if handler.__class__.__name__ == 'LogForwarder':
                     logger.removeHandler(handler)
+            
             logger.info("Cleaning up processes...")
             time.sleep(1)
             web_proc.terminate()

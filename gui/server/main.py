@@ -52,6 +52,7 @@ class ServerState:
         self.should_execute = False
         self.completed = False
         self.should_reset = False
+        self.agent_ws: Optional[WebSocket] = None  # Human.py 的 WebSocket 连接
 
 state = ServerState()
 
@@ -200,7 +201,7 @@ class ConnectionManager:
         }
 
     async def broadcast(self, message_type: WSMessageType, data: Any):
-        """广播消息到所有连接"""
+        """广播消息到所有前端连接"""
         if not self.connections:
             return
             
@@ -239,9 +240,10 @@ manager = ConnectionManager()
 async def root():
     return {
         "message": "ParaCook Human Agent API Server",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "status": "running",
-        "websocket_connections": len(manager.connections)
+        "websocket_connections": len(manager.connections),
+        "agent_connected": state.agent_ws is not None
     }
 
 @app.get("/api/actions")
@@ -260,7 +262,7 @@ async def save_actions(data: ActionsData):
         {"actions": state.current_actions}
     )
     
-    # 广播配置更新（因为动作数量变了）
+    # 广播配置更新
     config_data = manager._get_config_data()
     await manager.broadcast(
         WSMessageType.CONFIG_UPDATE,
@@ -348,39 +350,38 @@ async def clear_actions():
 
 @app.post("/api/actions/execute")
 async def execute_actions():
-    """触发执行动作计划"""
+    """触发执行动作计划（通过 WebSocket 通知 Human.py）"""
     if not state.current_actions:
         return {"success": False, "message": "No actions to execute"}
     
-    state.should_execute = True
-    
-    # 广播执行状态
-    await manager.broadcast(
-        WSMessageType.TASK_STATUS,
-        {
-            "completed": state.completed,
-            "should_execute": state.should_execute,
-            "executing": True
-        }
-    )
-    
-    return {"success": True, "message": "Execution triggered"}
-
-@app.get("/api/actions/should_execute")
-async def should_execute():
-    """检查是否应该执行（供 Human.py 轮询）"""
-    if state.should_execute:
-        state.should_execute = False  # 重置标志
-        return {
-            "success": True, 
-            "should_execute": True,
-            "data": state.current_actions
-        }
-    return {"success": True, "should_execute": False}
+    # 通过 WebSocket 通知 Human.py
+    if state.agent_ws:
+        try:
+            await state.agent_ws.send_json({
+                "type": "execute",
+                "data": state.current_actions
+            })
+            print(f"✅ Sent execute command to Human.py via WebSocket")
+            
+            # 广播执行状态到前端
+            await manager.broadcast(
+                WSMessageType.TASK_STATUS,
+                {
+                    "completed": state.completed,
+                    "executing": True
+                }
+            )
+            
+            return {"success": True, "message": "Execution command sent"}
+        except Exception as e:
+            print(f"❌ Failed to send execute command: {e}")
+            return {"success": False, "message": f"Failed to send command: {str(e)}"}
+    else:
+        return {"success": False, "message": "Agent not connected"}
 
 @app.get("/api/world")
 async def get_world():
-    """获取当前世界状态（前端调用）"""
+    """获取当前世界状态"""
     if state.world_state:
         return {
             "success": True,
@@ -452,7 +453,7 @@ async def get_logs(limit: int = 100):
 
 @app.post("/api/logs")
 async def add_log(log: LogMessage):
-    """添加日志（由 Human.py 调用）"""
+    """添加日志"""
     log_entry = log.model_dump()
     await manager.add_log(log_entry)
     return {"success": True}
@@ -480,7 +481,7 @@ async def get_log_history():
 
 @app.post("/api/task/complete")
 async def mark_task_complete():
-    """标记任务完成（由 Human.py 调用）"""
+    """标记任务完成"""
     state.completed = True
     
     # 广播任务完成
@@ -524,9 +525,17 @@ async def reset_task():
 
 @app.post("/api/reset")
 async def reset_all():
-    """重置所有状态到初始状态"""
+    """重置所有状态（通过 WebSocket 通知 Human.py）"""
     try:
-        state.should_reset = True
+        # 通过 WebSocket 通知 Human.py 重置
+        if state.agent_ws:
+            try:
+                await state.agent_ws.send_json({
+                    "type": "reset"
+                })
+                print(f"✅ Sent reset command to Human.py via WebSocket")
+            except Exception as e:
+                print(f"❌ Failed to send reset command: {e}")
         
         # 清空所有状态
         state.should_execute = False
@@ -563,26 +572,12 @@ async def reset_all():
             config_data
         )
         
-        return {"success": True, "message": "Reset signal sent"}
+        return {"success": True, "message": "Reset command sent"}
     except Exception as e:
         print(f"Error in reset_all: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/should_reset")
-async def should_reset():
-    """检查是否应该重置"""
-    return {
-        "success": True,
-        "should_reset": state.should_reset
-    }
-
-@app.post("/api/reset/confirm")
-async def confirm_reset():
-    """确认重置完成"""
-    state.should_reset = False
-    return {"success": True}
 
 @app.get("/api/config")
 async def get_config_info():
@@ -590,14 +585,15 @@ async def get_config_info():
     config_data = manager._get_config_data()
     return {"success": True, "data": config_data}
 
-# 统一的 WebSocket 端点
+# ============= WebSocket 端点 =============
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)  # 这里面已经调用了 send_initial_data
+    """前端 WebSocket 端点"""
+    await manager.connect(websocket)
     
     try:
         while True:
-            # 保持连接并处理 ping
             data = await websocket.receive_text()
             
             if data == "ping":
@@ -611,8 +607,33 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
 
+@app.websocket("/ws/agent")
+async def agent_websocket_endpoint(websocket: WebSocket):
+    """Human.py 专用的 WebSocket 端点"""
+    await websocket.accept()
+    state.agent_ws = websocket
+    print(f"✅ Human.py agent connected via WebSocket")
+    
+    try:
+        while True:
+            # 保持连接活跃
+            data = await websocket.receive_text()
+            
+            if data == "ping":
+                await websocket.send_json({
+                    "type": "pong",
+                    "timestamp": datetime.now().isoformat()
+                })
+    except WebSocketDisconnect:
+        print(f"⚠️ Human.py agent disconnected")
+        state.agent_ws = None
+    except Exception as e:
+        print(f"Agent WebSocket error: {e}")
+        state.agent_ws = None
+
 if __name__ == "__main__":
     import uvicorn
     print(f"Starting FastAPI server on http://{API_HOST}:{API_PORT}")
-    print(f"WebSocket endpoint: ws://{API_HOST}:{API_PORT}/ws")
+    print(f"Frontend WebSocket endpoint: ws://{API_HOST}:{API_PORT}/ws")
+    print(f"Agent WebSocket endpoint: ws://{API_HOST}:{API_PORT}/ws/agent")
     uvicorn.run(app, host=API_HOST, port=API_PORT)
