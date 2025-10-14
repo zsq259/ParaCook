@@ -2,7 +2,7 @@
 
 > A benchmark for evaluating parallel and asynchronous planning ability of large language model based agents.
 
-📌 **Paper:** Coming soon on arXiv (link placeholder)
+📌 **[Paper Link](https://arxiv.org/abs/2510.11608)**
 
 ---
 
@@ -50,7 +50,19 @@ Or see and run the script for batch tests:
 ---
 
 ## 📚 Citation
-If you find this work useful, please consider citing (BibTeX coming soon)
+If you find this work useful, please consider citing our paper:
+
+```bibtex
+@misc{zhang2025paracooktimeefficientplanningmultiagent,
+      title={ParaCook: On Time-Efficient Planning for Multi-Agent Systems}, 
+      author={Shiqi Zhang and Xinbei Ma and Yunqing Xu and Zouying Cao and Pengrui Lu and Haobo Yuan and Tiancheng Shen and Zhuosheng Zhang and Hai Zhao and Ming-Hsuan Yang},
+      year={2025},
+      eprint={2510.11608},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2510.11608}, 
+}
+```
 
 
 
