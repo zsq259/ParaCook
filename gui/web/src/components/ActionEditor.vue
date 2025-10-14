@@ -19,7 +19,7 @@
         <el-input
           v-model="jsonString"
           type="textarea"
-          :rows="5"
+          :rows="10"
           placeholder="Editable Action List (JSON format)"
           class="json-editor"
           @blur="handleJsonChange"
@@ -41,7 +41,7 @@
       <div v-if="Object.keys(localActions).length === 0" class="empty-state">
         <el-empty 
           description="No actions yet. Add some actions below!"
-          :image-size="20"
+          :image-size="80"
         />
       </div>
 
@@ -196,7 +196,6 @@ const formatTarget = (target) => {
 <style scoped>
 .action-editor-card {
   width: 100%;
-  margin-bottom: 1em;
 }
 
 .action-editor-card :deep(.el-card__header) {
@@ -243,11 +242,11 @@ const formatTarget = (target) => {
 }
 
 .empty-state {
-  height: 6em;
+  height: 20.1em;
 }
 
 .action-list {
-  height: 6em;
+  height: 20.1em;
   overflow-y: auto;
   padding-right: 8px;
 }

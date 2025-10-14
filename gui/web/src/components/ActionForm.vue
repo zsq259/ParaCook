@@ -29,7 +29,7 @@
 
       <!-- 选择动作类型 -->
       <el-form-item label="Action Type" prop="actionType">
-        <el-radio-group v-model="formData.actionType" size="default">
+        <el-radio-group v-model="formData.actionType" size="small">
           <el-radio-button 
             v-for="type in actionTypes" 
             :key="type"
@@ -255,7 +255,7 @@ const resetForm = () => {
 <style scoped>
 .action-form-card {
   width: 100%;
-  margin-bottom: 1em;
+  /* margin-bottom: 1em; */
   height: 16em;
 }
 

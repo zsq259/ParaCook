@@ -17,7 +17,7 @@
     <el-main style="padding: 10px 20px">
       <el-row :gutter="20">
         <!-- 左侧：地图区域 -->
-        <el-col :span="12">
+        <el-col :span="9">
           <div class="left-panel">
             <MapViewer 
               ref="mapViewerRef"
@@ -30,9 +30,8 @@
         </el-col>
 
         <!-- 右侧：动作编辑区域 -->
-        <el-col :span="12">
-          <!-- <el-space direction="vertical" :size="18" style="width: 100%"> -->
-            <div class="right-panel">
+        <el-col :span="15">
+          <div class="right-panel">
             <!-- 配置信息 -->
             <ConfigInfo 
               ref="configInfoRef"
@@ -40,37 +39,47 @@
               :refresh-interval="5000" 
             />
 
-            <!-- 动作编辑器 -->
-            <ActionEditor 
-              v-model:actions="actions"
-              :agent-names="agentNames"
-            />
+            <!-- 动作编辑和表单区域 -->
+            <el-row :gutter="20">
+              <!-- 左侧：动作编辑器 -->
+              <el-col :span="14">
+                <ActionEditor 
+                  v-model:actions="actions"
+                  :agent-names="agentNames"
+                />
+              </el-col>
 
-            <!-- 添加动作表单 -->
-            <ActionForm 
-              :agent-names="agentNames"
-              @add-action="handleAddAction"
-              :disabled="taskCompleted"
-            />
+              <!-- 右侧：动作表单和执行按钮 -->
+              <el-col :span="10">
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                  <!-- 添加动作表单 -->
+                  <ActionForm 
+                    :agent-names="agentNames"
+                    @add-action="handleAddAction"
+                    :disabled="taskCompleted"
+                  />
 
-            <!-- 执行按钮 -->
-            <el-button 
-              type="success" 
-              size="large" 
-              style="width: 100%"
-              @click="handleExecute"
-              :loading="executing"
-              :disabled="taskCompleted || Object.keys(actions).length === 0"
-            >
-              <template v-if="!executing">
-                <el-icon style="margin-right: 8px"><VideoPlay /></el-icon>
-                {{ taskCompleted ? 'Task Completed' : 'Execute Action Plan' }}
-              </template>
-              <template v-else>
-                Executing...
-              </template>
-            </el-button>
-           </div>
+                  <!-- 执行按钮 -->
+                  <el-button 
+                    type="success" 
+                    size="large" 
+                    style="width: 100%"
+                    @click="handleExecute"
+                    :loading="executing"
+                    :disabled="taskCompleted || Object.keys(actions).length === 0"
+                  >
+                    <template v-if="!executing">
+                      <el-icon style="margin-right: 8px"><VideoPlay /></el-icon>
+                      {{ taskCompleted ? 'Task Completed' : 'Execute Action Plan' }}
+                    </template>
+                    <template v-else>
+                      Executing...
+                    </template>
+                  </el-button>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
         </el-col>
       </el-row>
     </el-main>
@@ -266,8 +275,9 @@ onUnmounted(() => {
 
 <style scoped>
 .app-container {
-  height: 60.3em;
+  height: 98.4vh;
   background-color: #f5f7fa;
+  overflow: hidden;
 }
 
 .header-content {
