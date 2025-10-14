@@ -16,8 +16,15 @@ from typing import Optional
 import threading
 import logging
 
+config_path = "config/gui_config.json"
+with open(config_path, 'r') as f:
+    config = json.load(f)
+
+API_URL = f"http://{config['api']['host']}:{config['api']['port']}"
+WEB_URL = f"http://{config['web']['host']}:{config['web']['port']}"
+
 class HumanAgent(Agent):
-    def __init__(self, model: Model, api_url: str = "http://localhost:5000"):
+    def __init__(self, model: Model, api_url: str = API_URL):
         super().__init__(model)
         self.api_url = api_url
         self.session = requests.Session()
@@ -199,7 +206,7 @@ class HumanAgent(Agent):
         try:
             logger.info("Human Agent Interface Started")
             logger.info(f"API Server: {self.api_url}")
-            logger.info("Web Interface: http://localhost:5173")
+            logger.info(f"Web Interface: {WEB_URL}")
             logger.info("Press Ctrl+C to stop")
             logger.info("=" * 60)
 

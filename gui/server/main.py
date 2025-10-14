@@ -6,6 +6,13 @@ from collections import deque
 import json
 import asyncio
 
+config_path = "config/gui_config.json"
+with open(config_path, 'r') as f:
+    config = json.load(f)
+
+API_HOST = config['api']['host']
+API_PORT = config['api']['port']
+
 app = FastAPI()
 
 # 配置 CORS
@@ -378,5 +385,5 @@ async def websocket_endpoint(websocket: WebSocket):
 
 if __name__ == "__main__":
     import uvicorn
-    print("Starting FastAPI server on http://0.0.0.0:5000")
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    print(f"Starting FastAPI server on http://{API_HOST}:{API_PORT}")
+    uvicorn.run(app, host=API_HOST, port=API_PORT)

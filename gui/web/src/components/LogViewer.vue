@@ -77,6 +77,12 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CopyDocument, Document } from '@element-plus/icons-vue'
+import config from '../../../../config/gui_config.json'
+
+const API_HOST = config.api.host
+const API_PORT = config.api.port
+const WS_LOGS_URL = `ws://${API_HOST}:${API_PORT}/ws/logs`
+const API_URL = `http://${API_HOST}:${API_PORT}/api`
 
 // 【删除】移除 props 定义
 // const props = defineProps({ log: { type: String, default: '' } })
@@ -172,7 +178,7 @@ const connectWebSocket = () => {
   }
   
   try {
-    ws = new WebSocket('ws://localhost:5000/ws/logs')
+    ws = new WebSocket(WS_LOGS_URL)
     
     ws.onopen = () => {
       console.log('Log WebSocket connected')
@@ -251,7 +257,7 @@ const connectWebSocket = () => {
 // 【新增】加载历史日志
 const loadHistoryLogs = async () => {
   try {
-    const response = await fetch('http://localhost:5000/api/logs/history')
+    const response = await fetch(`${API_URL}/logs/history`)
     const result = await response.json()
     
     if (result.success && result.data) {
@@ -275,7 +281,7 @@ const loadHistoryLogs = async () => {
 const clearLogs = async () => {
   try {
     logEntries.value = []
-    const response = await fetch('http://localhost:5000/api/logs', { 
+    const response = await fetch(`${API_URL}/logs`, {
       method: 'DELETE' 
     })
     const result = await response.json()

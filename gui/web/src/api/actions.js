@@ -1,6 +1,10 @@
 import axios from 'axios'
+import config from '../../../../config/gui_config.json'
 
-const BASE_URL = 'http://localhost:5000/api'
+const API_HOST = config.api.host
+const API_PORT = config.api.port
+const BASE_URL = `http://${API_HOST}:${API_PORT}/api`
+const WS_URL = `ws://${API_HOST}:${API_PORT}/ws`
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -45,7 +49,7 @@ export const resetAll = () => api.post('/reset')
 
 // WebSocket 连接
 export const createWebSocket = (onMessage) => {
-  const ws = new WebSocket('ws://localhost:5000/ws')
+  const ws = new WebSocket(WS_URL)
   
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data)

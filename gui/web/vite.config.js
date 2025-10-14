@@ -1,6 +1,12 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
+
+const configPath = resolve(__dirname, '../../config/gui_config.json')
+const config = JSON.parse(readFileSync(configPath, 'utf-8'))
+
 
 export default defineConfig({
   plugins: [vue()],
@@ -13,7 +19,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: `http://${config.api.host}:${config.api.port}`,
         changeOrigin: true
       }
     }
