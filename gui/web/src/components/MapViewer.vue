@@ -26,7 +26,7 @@
     
     <div class="map-content" v-loading="loading">
       <!-- 地图网格（带坐标轴） -->
-      <div v-if="mapData" class="map-grid-container">
+      <div v-if="mapData" class="map-grid-container" ref="mapContainer">
         <div class="map-with-axes">
           <!-- 左上角空白 -->
           <div class="axis-corner"></div>
@@ -66,7 +66,8 @@
               :key="index"
               class="map-cell"
               :class="getCellClass(cell)"
-              @mouseenter="hoveredCell = cell"
+              @mouseenter="handleCellHover($event, cell)"
+              @mousemove="handleMouseMove"
               @mouseleave="hoveredCell = null"
             >
               <div class="cell-content">
@@ -85,6 +86,7 @@
         <div 
           v-if="hoveredCell && hoveredCell.data" 
           class="cell-tooltip-wrapper"
+          :style="tooltipStyle"
         >
           <el-card 
             class="cell-tooltip"
@@ -164,6 +166,70 @@ const loading = ref(false)
 const hoveredCell = ref(null)
 const isConnected = ref(false)
 const unsubscribers = []
+
+const mapContainer = ref(null)
+const mousePosition = ref({ x: 0, y: 0 })
+const tooltipStyle = computed(() => {
+  if (!hoveredCell.value || !mapContainer.value) return {}
+  
+  const offsetX = 15 // 基础水平偏移
+  const offsetY = 15 // 基础垂直偏移
+  const tooltipWidth = 320 // 提示框估计宽度
+  const tooltipHeight = 200 // 提示框估计高度
+  
+  const containerRect = mapContainer.value.getBoundingClientRect()
+  const containerWidth = containerRect.width
+  const containerHeight = containerRect.height
+  
+  let left = mousePosition.value.x + offsetX
+  let top = mousePosition.value.y - tooltipHeight - offsetY
+  
+  // 水平方向调整：如果右侧空间不足，显示在鼠标左侧
+  if (left + tooltipWidth > containerWidth) {
+    left = mousePosition.value.x - tooltipWidth - offsetX
+  }
+  
+  // 垂直方向调整：如果上方空间不足，显示在鼠标下方
+  if (top < 0) {
+    top = mousePosition.value.y + offsetY
+  }
+  
+  // 确保不会完全超出左边界
+  if (left < 0) {
+    left = offsetX
+  }
+  
+  // 确保不会完全超出下边界
+  if (top + tooltipHeight > containerHeight) {
+    top = containerHeight - tooltipHeight - offsetY
+  }
+  
+  return {
+    left: `${left}px`,
+    top: `${top}px`,
+  }
+})
+
+const handleCellHover = (event, cell) => {
+  hoveredCell.value = cell
+  updateMousePosition(event)
+}
+
+const handleMouseMove = (event) => {
+  if (hoveredCell.value) {
+    updateMousePosition(event)
+  }
+}
+
+const updateMousePosition = (event) => {
+  if (!mapContainer.value) return
+  
+  const rect = mapContainer.value.getBoundingClientRect()
+  mousePosition.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  }
+}
 
 // 加载地图数据（手动刷新时调用）
 const loadMapData = async () => {
@@ -516,9 +582,6 @@ defineExpose({
 
 .cell-tooltip-wrapper {
   position: absolute;
-  top: 50%;
-  left: 90%;
-  transform: translate(-50%, -50%);
   z-index: 1000;
   pointer-events: none;
 }
