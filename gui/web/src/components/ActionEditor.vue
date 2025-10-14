@@ -294,10 +294,6 @@ const formatTarget = (target) => {
   padding: 6px 12px;
 }
 
-/* .action-item :deep(.el-timeline-item) {
-  padding-bottom: 10px;
-} */
-
 .action-index {
   font-weight: 600;
   color: #909399;

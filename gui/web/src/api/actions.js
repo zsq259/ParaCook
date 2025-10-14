@@ -43,7 +43,6 @@ export const clearLogs = () => api.delete('/logs')
 // Task Status
 export const getTaskStatus = () => api.get('/task/status')
 export const markTaskComplete = () => api.post('/task/complete')
-export const resetTask = () => api.post('/task/reset')
 
 export const resetAll = () => api.post('/reset')
 

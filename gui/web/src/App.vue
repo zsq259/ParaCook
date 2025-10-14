@@ -96,10 +96,13 @@ import { useWebSocket } from './composables/useWebSocket'
 import { 
   executeActions, 
   clearActions, 
-  saveActions, 
-  resetTask,
+  saveActions,
   resetAll
 } from './api/actions'
+
+// ========== 开发环境日志开关 ==========
+const DEBUG = import.meta.env.DEV
+const log = (...args) => DEBUG && console.log(...args)
 
 // WebSocket 连接
 const { isConnected, subscribe, getStats } = useWebSocket()
@@ -111,97 +114,100 @@ const agentNames = ref([])
 const actions = ref({})
 const executing = ref(false)
 const taskCompleted = ref(false)
-
-
 const subscriptionsSetup = ref(false)
 
-// ========== WebSocket 事件订阅 ==========
+// ========== 通用错误处理 ==========
+const handleApiError = (error, defaultMessage) => {
+  console.error(defaultMessage, error)
+  ElMessage.error(error.message || defaultMessage)
+}
 
+// ========== WebSocket 事件订阅（优化版）==========
 const setupSubscriptions = () => {
   if (subscriptionsSetup.value) {
-    console.log('⚠️ Subscriptions already set up, skipping...')
+    log('⚠️ Subscriptions already set up, skipping...')
     return
   }
   
-  console.log('✅ Setting up WebSocket subscriptions...')
-  console.log('📊 WebSocket stats:', getStats())
+  log('✅ Setting up WebSocket subscriptions...')
+  log('📊 WebSocket stats:', getStats())
   
-  // 订阅任务状态更新
-  subscribe('task_status', (data) => {
-    console.log('📊 Task status update:', data)
+  // 集中管理所有订阅
+  const subscriptions = {
+    task_status: (data) => {
+      log('📊 Task status update:', data)
+      
+      if (data.completed && !taskCompleted.value) {
+        taskCompleted.value = true
+        ElMessage({
+          message: '🎉 All orders completed successfully!',
+          type: 'success',
+          duration: 0,
+          showClose: true
+        })
+      }
+      
+      if (data.reset) {
+        taskCompleted.value = false
+      }
+    },
     
-    if (data.completed && !taskCompleted.value) {
-      taskCompleted.value = true
-      ElMessage({
-        message: '🎉 All orders completed successfully!',
-        type: 'success',
-        duration: 0,
-        showClose: true
-      })
-    }
+    map_update: (data) => {
+      log('🗺️ Map update received:', data)
+      mapViewerRef.value?.updateMap(data)
+    },
     
-    if (data.reset) {
+    config_update: (data) => {
+      log('⚙️ Config update received:', data)
+      configInfoRef.value?.updateConfig(data)
+    },
+    
+    agents_update: (data) => {
+      log('👥 Agents update received:', data)
+      agentNames.value = data
+    },
+    
+    actions_update: (data) => {
+      log('🎬 Actions update received:', data)
+      actions.value = data.actions
+    },
+    
+    system_reset: (data) => {
+      log('🔄 System reset received:', data)
       taskCompleted.value = false
+      actions.value = {}
+      ElMessage.success('System has been reset to initial state')
+    },
+    
+    connected: (data) => {
+      if (data.connected) {
+        log('✅ WebSocket connected event received')
+      }
     }
-  })
-
-  // 订阅地图更新
-  subscribe('map_update', (data) => {
-    console.log('🗺️ Map update received:', data)
-    mapViewerRef.value?.updateMap(data)
-  })
-
-  // 订阅配置更新
-  subscribe('config_update', (data) => {
-    console.log('⚙️ Config update received:', data)
-    configInfoRef.value?.updateConfig(data)
-  })
-
-  // 订阅 agent 列表更新
-  subscribe('agents_update', (data) => {
-    console.log('👥 Agents update received:', data)
-    agentNames.value = data
-  })
-
-  // 订阅动作更新
-  subscribe('actions_update', (data) => {
-    console.log('🎬 Actions update received:', data)
-    actions.value = data.actions
-  })
-
-  // 订阅系统重置
-  subscribe('system_reset', (data) => {
-    console.log('🔄 System reset received:', data)
-    taskCompleted.value = false
-    actions.value = {}
-    ElMessage.success('System has been reset to initial state')
-  })
-
-  // 连接成功后的处理
-  subscribe('connected', (data) => {
-    if (data.connected) {
-      console.log('✅ WebSocket connected event received')
-    }
+  }
+  
+  // 批量注册订阅
+  Object.entries(subscriptions).forEach(([event, handler]) => {
+    subscribe(event, handler)
   })
   
   subscriptionsSetup.value = true
-  console.log('✅ All subscriptions set up')
-  console.log('📊 Final stats:', getStats())
+  log('✅ All subscriptions set up')
+  log('📊 Final stats:', getStats())
 }
 
-
-// 监听连接状态，连接后立即设置订阅
+// 监听连接状态（优化版）
 watch(isConnected, (newVal) => {
-  console.log(`🔌 Connection status: ${newVal}`)
+  log(`🔌 Connection status changed: ${newVal}`)
   if (newVal && !subscriptionsSetup.value) {
-    console.log('🎯 Connection established, setting up subscriptions...')
+    log('🎯 Connection established, setting up subscriptions...')
     setupSubscriptions()
   }
 }, { immediate: true })
 
 onMounted(() => {
-  console.log('🚀 App.vue mounted')
-  console.log('🔌 Initial connection status:', isConnected.value)
+  log('🚀 App.vue mounted')
+  log('🔌 Initial connection status:', isConnected.value)
   
   // 如果已经连接，立即设置订阅
   if (isConnected.value) {
@@ -209,9 +215,9 @@ onMounted(() => {
   }
 })
 
-// ========== 动作处理 ==========
+// ========== 动作处理（优化版）==========
 
-// 添加动作
+// 添加动作（带错误回滚）
 const handleAddAction = async (actionData) => {
   const { agent, action } = actionData
   
@@ -225,12 +231,13 @@ const handleAddAction = async (actionData) => {
     await saveActions(actions.value)
     ElMessage.success(`Successfully added action for ${agent}`)
   } catch (error) {
-    console.error('Failed to save actions:', error)
-    ElMessage.error('Failed to save action to server')
+    handleApiError(error, 'Failed to save action to server')
+    // 回滚操作
+    actions.value[agent].pop()
   }
 }
 
-// 执行动作计划
+// 执行动作计划（统一错误处理）
 const handleExecute = async () => {
   if (Object.keys(actions.value).length === 0) {
     ElMessage.warning('No actions to execute')
@@ -246,20 +253,17 @@ const handleExecute = async () => {
     // 触发执行
     const result = await executeActions()
     
-    if (result.success) {
-      ElMessage.success('Action plan submitted for execution!')
-    } else {
-      ElMessage.error(result.message || 'Failed to execute action plan')
-    }
+    result.success 
+      ? ElMessage.success('Action plan submitted for execution!')
+      : ElMessage.error(result.message || 'Failed to execute action plan')
   } catch (error) {
-    console.error('Execute error:', error)
-    ElMessage.error('Failed to execute action plan')
+    handleApiError(error, 'Failed to execute action plan')
   } finally {
     executing.value = false
   }
 }
 
-// 清除所有状态
+// 清除所有状态（统一错误处理）
 const handleClearAll = async () => {
   try {
     await ElMessageBox.confirm(
@@ -277,21 +281,16 @@ const handleClearAll = async () => {
     
     try {
       await clearActions()
-      await resetTask()
       const result = await resetAll()
 
-      if (result.success) {
-        ElMessage.success('System reset successfully!')
-        // WebSocket 会自动推送更新，无需手动刷新
-      } else {
-        ElMessage.error('Failed to reset system')
-      }
+      result.success 
+        ? ElMessage.success('System reset successfully!')
+        : ElMessage.error('Failed to reset system')
     } catch (error) {
-      console.error('Failed to reset system:', error)
-      ElMessage.error('Failed to reset system states')
+      handleApiError(error, 'Failed to reset system states')
     }
   } catch {
-    // 用户取消
+    // 用户取消操作
   }
 }
 </script>

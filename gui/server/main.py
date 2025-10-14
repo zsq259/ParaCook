@@ -49,9 +49,7 @@ class ServerState:
         self.recipes: List[str] = []
         self.orders: List[str] = []
         self.logs: deque = deque(maxlen=1000)
-        self.should_execute = False
         self.completed = False
-        self.should_reset = False
         self.agent_ws: Optional[WebSocket] = None  # Human.py 的 WebSocket 连接
 
 state = ServerState()
@@ -128,7 +126,6 @@ class ConnectionManager:
                 "type": WSMessageType.TASK_STATUS,
                 "data": {
                     "completed": state.completed,
-                    "should_execute": state.should_execute
                 },
                 "timestamp": datetime.now().isoformat()
             })
@@ -471,14 +468,6 @@ async def clear_logs():
     
     return {"success": True, "message": "Logs cleared"}
 
-@app.get("/api/logs/history")
-async def get_log_history():
-    """获取历史日志"""
-    return {
-        "success": True,
-        "data": list(state.logs)
-    }
-
 @app.post("/api/task/complete")
 async def mark_task_complete():
     """标记任务完成"""
@@ -510,19 +499,6 @@ async def get_task_status():
         "completed": state.completed
     }
 
-@app.post("/api/task/reset")
-async def reset_task():
-    """重置任务状态"""
-    state.completed = False
-    
-    # 广播任务状态更新
-    await manager.broadcast(
-        WSMessageType.TASK_STATUS,
-        {"completed": False}
-    )
-    
-    return {"success": True}
-
 @app.post("/api/reset")
 async def reset_all():
     """重置所有状态（通过 WebSocket 通知 Human.py）"""
@@ -538,7 +514,6 @@ async def reset_all():
                 print(f"❌ Failed to send reset command: {e}")
         
         # 清空所有状态
-        state.should_execute = False
         state.world_state = None
         state.logs.clear()
         state.completed = False

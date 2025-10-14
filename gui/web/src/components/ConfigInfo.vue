@@ -14,7 +14,7 @@
           </el-tag>
           <el-button 
             size="small" 
-            @click="loadData"
+            @click="handleRefresh"
             :loading="loading"
             :icon="Refresh"
           >
@@ -29,17 +29,22 @@
           <el-icon><Files /></el-icon>
           <span>Recipes ({{ recipes.length }})</span>
         </div>
-        <div class="config-content">
-          <el-tag 
-            v-for="(recipe, index) in recipes" 
-            :key="index"
-            type="success"
-            effect="plain"
-            class="recipe-tag"
-          >
-            {{ recipe }}
-          </el-tag>
-          <span v-if="recipes.length === 0" class="empty-text">No recipes</span>
+        <div class="config-content scrollable">
+          <template v-if="recipes.length > 0">
+            <el-tag 
+              v-for="(recipe, index) in recipes" 
+              :key="index"
+              type="success"
+              effect="plain"
+              class="recipe-tag"
+            >
+              {{ recipe }}
+            </el-tag>
+          </template>
+          <div v-else class="empty-state">
+            <el-icon><Document /></el-icon>
+            <span>No recipes configured</span>
+          </div>
         </div>
       </div>
       
@@ -50,17 +55,22 @@
           <el-icon><Document /></el-icon>
           <span>Orders ({{ orders.length }})</span>
         </div>
-        <div class="config-content">
-          <el-tag 
-            v-for="(order, index) in orders" 
-            :key="index"
-            type="warning"
-            effect="plain"
-            class="order-tag"
-          >
-            {{ order }}
-          </el-tag>
-          <span v-if="orders.length === 0" class="empty-text">No orders</span>
+        <div class="config-content scrollable">
+          <template v-if="orders.length > 0">
+            <el-tag 
+              v-for="(order, index) in orders" 
+              :key="index"
+              type="warning"
+              effect="plain"
+              class="order-tag"
+            >
+              {{ order }}
+            </el-tag>
+          </template>
+          <div v-else class="empty-state">
+            <el-icon><Files /></el-icon>
+            <span>No orders configured</span>
+          </div>
         </div>
       </div>
     </div>
@@ -74,17 +84,14 @@ import { Refresh, Files, Document } from '@element-plus/icons-vue'
 import { wsService } from '@/services/websocket'
 import { getRecipes, getOrders } from '@/api/actions'
 
-// 移除 props，不再需要 autoRefresh 和 refreshInterval
-// const props = defineProps({ ... })
-
 const recipes = ref([])
 const orders = ref([])
 const loading = ref(false)
 const isConnected = ref(false)
 const unsubscribers = []
 
-// 加载数据（手动刷新时调用）
-const loadData = async () => {
+// 加载数据（手动刷新或重连时调用）
+const loadData = async (showMessage = false) => {
   loading.value = true
   try {
     // 并行请求 recipes 和 orders
@@ -95,83 +102,124 @@ const loadData = async () => {
     
     if (recipesResult.success) {
       recipes.value = recipesResult.data || []
+      console.log(`📋 Loaded ${recipes.value.length} recipes`)
+    } else if (showMessage) {
+      ElMessage.warning('Failed to load recipes')
     }
     
     if (ordersResult.success) {
       orders.value = ordersResult.data || []
+      console.log(`📦 Loaded ${orders.value.length} orders`)
+    } else if (showMessage) {
+      ElMessage.warning('Failed to load orders')
+    }
+    
+    if (showMessage && recipesResult.success && ordersResult.success) {
+      ElMessage.success('Config data refreshed')
     }
   } catch (error) {
     console.error('Failed to load config data:', error)
-    ElMessage.error('Failed to load recipes and orders')
+    if (showMessage) {
+      ElMessage.error('Failed to load recipes and orders')
+    }
   } finally {
     loading.value = false
   }
 }
 
-// 通过 WebSocket 更新配置（父组件或自动推送调用）
-const updateConfig = (data) => {
-  console.log('⚙️ Updating config from WebSocket push:', data)
-  
-  // 从 config_update 消息中提取数据
-  // 注意：后端的 config_update 包含统计信息，不包含完整的 recipes 和 orders
-  // 我们需要保留当前的 recipes 和 orders，或者从其他 WebSocket 消息获取
-  
-  // 如果后端发送了 recipes_count 和 orders_count，我们只更新显示
-  // 实际的 recipes 和 orders 列表需要通过初始数据或专门的 WebSocket 消息获取
+// 手动刷新按钮点击处理
+const handleRefresh = () => {
+  loadData(true)
 }
 
-// 从世界状态更新中提取 recipes 和 orders
-const updateFromWorldState = (data) => {
-  console.log('🌍 Updating from world state')
+// 通过 WebSocket 更新配置
+const updateConfig = (data) => {
+  console.log('⚙️ Config update received via WebSocket:', data)
   
-  // 当接收到完整的世界状态时，可能包含 recipes 和 orders
+  let updated = false
+  
   if (data.recipes !== undefined) {
     recipes.value = data.recipes || []
+    console.log(`  📋 Updated recipes: ${recipes.value.length} items`)
+    updated = true
   }
   
   if (data.orders !== undefined) {
     orders.value = data.orders || []
+    console.log(`  📦 Updated orders: ${orders.value.length} items`)
+    updated = true
   }
+  
+  if (!updated && (data.recipes_count !== undefined || data.orders_count !== undefined)) {
+    console.log(`  ℹ️ Received count info: recipes=${data.recipes_count}, orders=${data.orders_count}`)
+  }
+}
+
+// 清空数据（系统重置时调用）
+const clearData = () => {
+  console.log('🧹 Clearing config data')
+  recipes.value = []
+  orders.value = []
 }
 
 // 生命周期钩子
 onMounted(() => {
-  // 订阅连接状态
+  console.log('📊 ConfigInfo component mounted')
+  
+  // 1. 订阅连接状态
   const unsubscribeConnected = wsService.subscribe('connected', (data) => {
+    const wasDisconnected = !isConnected.value
     isConnected.value = data.connected
+    
+    if (data.connected) {
+      console.log('✅ WebSocket connected, waiting for initial data push')
+      if (wasDisconnected) {
+        console.log('🔄 Reconnected, initial data will be pushed by server')
+      }
+    } else {
+      console.log('⚠️ WebSocket disconnected')
+    }
   })
   unsubscribers.push(unsubscribeConnected)
   
-  // 订阅配置更新（WebSocket 推送）
+  // 2. 订阅配置更新（最重要的数据源）
   const unsubscribeConfigUpdate = wsService.subscribe('config_update', (data) => {
-    console.log('⚙️ Config update received via WebSocket')
+    console.log('📨 Config update message received')
     updateConfig(data)
   })
   unsubscribers.push(unsubscribeConfigUpdate)
   
-  // 订阅地图更新（因为地图更新可能包含完整的世界状态）
-  const unsubscribeMapUpdate = wsService.subscribe('map_update', (data) => {
-    // 地图更新时也可能需要更新 recipes 和 orders
-    // 取决于后端发送的数据结构
+  // 3. 订阅系统重置
+  const unsubscribeReset = wsService.subscribe('system_reset', () => {
+    console.log('🔄 System reset received')
+    clearData()
+    ElMessage.info('System has been reset')
   })
-  unsubscribers.push(unsubscribeMapUpdate)
+  unsubscribers.push(unsubscribeReset)
   
   // 初始化连接状态
   isConnected.value = wsService.getConnectionState()
+  console.log(`Initial connection state: ${isConnected.value ? 'connected' : 'disconnected'}`)
   
-  // 初次加载数据（如果 WebSocket 还没发送初始数据）
-  loadData()
+  // 初次加载数据（作为备用）
+  if (!isConnected.value) {
+    console.log('WebSocket not connected, loading data via HTTP API')
+    loadData(false)
+  } else {
+    console.log('WebSocket connected, waiting for server push')
+  }
 })
 
 onUnmounted(() => {
-  // 清理所有订阅
+  console.log('📊 ConfigInfo component unmounting, cleaning up subscriptions')
   unsubscribers.forEach(unsub => unsub())
 })
 
 // 暴露方法给父组件
 defineExpose({
-  updateConfig,
   loadData,
+  updateConfig,
+  clearData,
   recipes,
   orders
 })
@@ -184,11 +232,11 @@ defineExpose({
 }
 
 .config-card :deep(.el-card__header) {
-  padding: 12px 20px;
+  padding: 6px 10px;
 }
 
 .config-card :deep(.el-card__body) {
-  padding: 15px 20px;
+  padding: 6px 10px;
 }
 
 .card-header-flex {
@@ -204,7 +252,7 @@ defineExpose({
 
 .config-info {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   flex-direction: column;
 }
 
@@ -212,9 +260,7 @@ defineExpose({
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-top: -0.6em;
-  margin-bottom: -0.3em;
+  gap: 8px;
 }
 
 .section-title {
@@ -238,18 +284,52 @@ defineExpose({
   min-height: 32px;
 }
 
+/* 添加滚动样式 */
+.config-content.scrollable {
+  max-height: 56px; /* 最大高度约4行标签 */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px; /* 为滚动条留出空间 */
+}
+
+/* 美化滚动条 */
+.config-content.scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.config-content.scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.config-content.scrollable::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+
+.config-content.scrollable::-webkit-scrollbar-thumb:hover {
+  background: #909399;
+}
+
 .recipe-tag,
 .order-tag {
   font-size: 13px;
 }
 
-.empty-text {
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: #909399;
-  font-style: italic;
   font-size: 13px;
+  font-style: italic;
+}
+
+.empty-state .el-icon {
+  font-size: 14px;
 }
 
 :deep(.el-divider--horizontal) {
-  margin: -0.5em;
+  margin: 0 0;
 }
 </style>
