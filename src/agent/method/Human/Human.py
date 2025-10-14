@@ -158,8 +158,8 @@ class HumanAgent(Agent):
         # logger.info(f"Starting API server: {server_path}")
         server_proc = subprocess.Popen(
             [sys.executable, server_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
         )
         
         # 等待服务器启动
@@ -167,6 +167,7 @@ class HumanAgent(Agent):
             server_proc.terminate()
             raise RuntimeError("Failed to start API server")
         
+        time.sleep(3)
         # 启动日志转发
         self.start_log_forwarding()
         
@@ -185,8 +186,8 @@ class HumanAgent(Agent):
         web_proc = subprocess.Popen(
             ['npm', 'run', 'dev'],
             cwd=web_path,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
         )
         
         # 保存模拟器副本
