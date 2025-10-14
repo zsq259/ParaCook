@@ -156,7 +156,7 @@ class HumanAgent(Agent):
         server_path = os.path.abspath(server_path)
         
 
-        output = subprocess.STDOUT if os.environ.get("DEBUG") else subprocess.DEVNULL
+        output = sys.stdout if os.environ.get("DEBUG") else subprocess.DEVNULL
 
         server_proc = subprocess.Popen(
             [sys.executable, server_path],
