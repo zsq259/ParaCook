@@ -4,6 +4,11 @@
       <div class="header-content">
         <h1>ParaCook Testing GUI</h1>
         <el-space>
+          <!-- WebSocket 连接状态指示器 -->
+          <el-tag :type="isConnected ? 'success' : 'danger'" size="small">
+            {{ isConnected ? '🟢 Connected' : '🔴 Disconnected' }}
+          </el-tag>
+          
           <el-tag v-if="taskCompleted" type="success" size="large" effect="dark">
             ✅ All Orders Completed!
           </el-tag>
@@ -19,11 +24,7 @@
         <!-- 左侧：地图区域 -->
         <el-col :span="9">
           <div class="left-panel">
-            <MapViewer 
-              ref="mapViewerRef"
-              :auto-refresh="!taskCompleted"
-              :refresh-interval="3000"
-            />
+            <MapViewer ref="mapViewerRef" />
             <!-- 日志查看器 -->
             <LogViewer />
           </div>
@@ -33,11 +34,7 @@
         <el-col :span="15">
           <div class="right-panel">
             <!-- 配置信息 -->
-            <ConfigInfo 
-              ref="configInfoRef"
-              :auto-refresh="true" 
-              :refresh-interval="5000" 
-            />
+            <ConfigInfo ref="configInfoRef" />
 
             <!-- 动作编辑和表单区域 -->
             <el-row :gutter="20">
@@ -87,85 +84,132 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted  } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { VideoPlay } from '@element-plus/icons-vue'  // 【新增】导入图标
+import { VideoPlay } from '@element-plus/icons-vue'
 import MapViewer from './components/MapViewer.vue'
 import ConfigInfo from './components/ConfigInfo.vue'
 import ActionEditor from './components/ActionEditor.vue'
 import ActionForm from './components/ActionForm.vue'
 import LogViewer from './components/LogViewer.vue'
+import { useWebSocket } from './composables/useWebSocket'
 import { 
   executeActions, 
   clearActions, 
   saveActions, 
-  getAgents,
-  getTaskStatus,
   resetTask,
   resetAll
 } from './api/actions'
 
+// WebSocket 连接
+const { isConnected, subscribe, getStats } = useWebSocket()
+
 // 状态管理
 const mapViewerRef = ref(null)
+const configInfoRef = ref(null)
 const agentNames = ref([])
 const actions = ref({})
-const configInfoRef = ref(null)
 const executing = ref(false)
-const loading = ref(false)
 const taskCompleted = ref(false)
 
-let statusCheckTimer = null
 
-const refreshConfig = () => {
-  if (taskCompleted.value) return
-  configInfoRef.value?.loadData()
-  mapViewerRef.value?.loadMapData()
-  loadAgents()
-}
+const subscriptionsSetup = ref(false)
 
-const checkTaskStatus = async () => {
-  try {
-    const result = await getTaskStatus()
-    if (result.success && result.completed && !taskCompleted.value) {
+// ========== WebSocket 事件订阅 ==========
+
+const setupSubscriptions = () => {
+  if (subscriptionsSetup.value) {
+    console.log('⚠️ Subscriptions already set up, skipping...')
+    return
+  }
+  
+  console.log('✅ Setting up WebSocket subscriptions...')
+  console.log('📊 WebSocket stats:', getStats())
+  
+  // 订阅任务状态更新
+  subscribe('task_status', (data) => {
+    console.log('📊 Task status update:', data)
+    
+    if (data.completed && !taskCompleted.value) {
       taskCompleted.value = true
       ElMessage({
         message: '🎉 All orders completed successfully!',
         type: 'success',
-        duration: 0,  // 不自动关闭
+        duration: 0,
         showClose: true
       })
-      
-      // 停止自动刷新
-      if (statusCheckTimer) {
-        clearInterval(statusCheckTimer)
-        statusCheckTimer = null
-      }
     }
-  } catch (error) {
-    // 忽略错误，避免在服务器关闭时报错
-  }
+    
+    if (data.reset) {
+      taskCompleted.value = false
+    }
+  })
+
+  // 订阅地图更新
+  subscribe('map_update', (data) => {
+    console.log('🗺️ Map update received:', data)
+    mapViewerRef.value?.updateMap(data)
+  })
+
+  // 订阅配置更新
+  subscribe('config_update', (data) => {
+    console.log('⚙️ Config update received:', data)
+    configInfoRef.value?.updateConfig(data)
+  })
+
+  // 订阅 agent 列表更新
+  subscribe('agents_update', (data) => {
+    console.log('👥 Agents update received:', data)
+    agentNames.value = data
+  })
+
+  // 订阅动作更新
+  subscribe('actions_update', (data) => {
+    console.log('🎬 Actions update received:', data)
+    actions.value = data.actions
+  })
+
+  // 订阅系统重置
+  subscribe('system_reset', (data) => {
+    console.log('🔄 System reset received:', data)
+    taskCompleted.value = false
+    actions.value = {}
+    ElMessage.success('System has been reset to initial state')
+  })
+
+  // 连接成功后的处理
+  subscribe('connected', (data) => {
+    if (data.connected) {
+      console.log('✅ WebSocket connected event received')
+    }
+  })
+  
+  subscriptionsSetup.value = true
+  console.log('✅ All subscriptions set up')
+  console.log('📊 Final stats:', getStats())
 }
 
-const loadAgents = async () => {
-  if (taskCompleted.value) return
-  loading.value = true
-  try {
-    const result = await getAgents()
-    if (result.success && result.data) {
-      agentNames.value = result.data
-    } else {
-      ElMessage.warning('No agents found')
-    }
-  } catch (error) {
-    console.error('Failed to load agents:', error)
-    ElMessage.error('Failed to load agent list')
-    // 如果加载失败，使用空列表
-    agentNames.value = []
-    
-  } finally {
-    loading.value = false
+
+// 监听连接状态，连接后立即设置订阅
+watch(isConnected, (newVal) => {
+  console.log(`🔌 Connection status: ${newVal}`)
+  if (newVal && !subscriptionsSetup.value) {
+    console.log('🎯 Connection established, setting up subscriptions...')
+    setupSubscriptions()
   }
-}
+}, { immediate: true })
+
+onMounted(() => {
+  console.log('🚀 App.vue mounted')
+  console.log('🔌 Initial connection status:', isConnected.value)
+  
+  // 如果已经连接，立即设置订阅
+  if (isConnected.value) {
+    setupSubscriptions()
+  }
+})
+
+// ========== 动作处理 ==========
 
 // 添加动作
 const handleAddAction = async (actionData) => {
@@ -177,7 +221,6 @@ const handleAddAction = async (actionData) => {
   
   actions.value[agent].push(action)
   
-    // 【新增】自动保存到服务器
   try {
     await saveActions(actions.value)
     ElMessage.success(`Successfully added action for ${agent}`)
@@ -185,11 +228,10 @@ const handleAddAction = async (actionData) => {
     console.error('Failed to save actions:', error)
     ElMessage.error('Failed to save action to server')
   }
-  refreshConfig()
 }
 
 // 执行动作计划
-const handleExecute = async () => {  // 【修改】改为 async，并添加完整逻辑
+const handleExecute = async () => {
   if (Object.keys(actions.value).length === 0) {
     ElMessage.warning('No actions to execute')
     return
@@ -207,7 +249,7 @@ const handleExecute = async () => {  // 【修改】改为 async，并添加完�
     if (result.success) {
       ElMessage.success('Action plan submitted for execution!')
     } else {
-      ElMessage.error(result.message || 'Failed to execute')
+      ElMessage.error(result.message || 'Failed to execute action plan')
     }
   } catch (error) {
     console.error('Execute error:', error)
@@ -232,9 +274,7 @@ const handleClearAll = async () => {
     
     // 清除本地状态
     actions.value = {}
-    taskCompleted.value = false
     
-    // 【新增】清除服务器状态
     try {
       await clearActions()
       await resetTask()
@@ -242,11 +282,7 @@ const handleClearAll = async () => {
 
       if (result.success) {
         ElMessage.success('System reset successfully!')
-        if (!statusCheckTimer) {
-          statusCheckTimer = setInterval(checkTaskStatus, 2000)
-        }
-        
-        refreshConfig()
+        // WebSocket 会自动推送更新，无需手动刷新
       } else {
         ElMessage.error('Failed to reset system')
       }
@@ -258,19 +294,6 @@ const handleClearAll = async () => {
     // 用户取消
   }
 }
-
-onMounted(() => {
-  loadAgents()
-  refreshConfig()
-  checkTaskStatus()
-  statusCheckTimer = setInterval(checkTaskStatus, 2000)
-})
-
-onUnmounted(() => {
-  if (statusCheckTimer) {
-    clearInterval(statusCheckTimer)
-  }
-})
 </script>
 
 <style scoped>

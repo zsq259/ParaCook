@@ -3,14 +3,24 @@
     <template #header>
       <div class="card-header-flex">
         <span class="card-header">Map Visualization</span>
-        <el-button 
-          size="small" 
-          @click="loadMapData"
-          :loading="loading"
-          :icon="Refresh"
-        >
-          Refresh
-        </el-button>
+        <el-space>
+          <!-- WebSocket 连接状态指示器 -->
+          <el-tag 
+            :type="isConnected ? 'success' : 'danger'" 
+            size="small"
+            effect="plain"
+          >
+            {{ isConnected ? '● Live' : '● Disconnected' }}
+          </el-tag>
+          <el-button 
+            size="small" 
+            @click="loadMapData"
+            :loading="loading"
+            :icon="Refresh"
+          >
+            Refresh
+          </el-button>
+        </el-space>
       </div>
     </template>
     
@@ -108,7 +118,7 @@
       <!-- 无数据提示 -->
       <div v-else class="map-placeholder">
         <el-empty 
-          description="No map data available"
+          description="No map data available. Waiting for world updates..."
           :image-size="150"
         />
       </div>
@@ -117,9 +127,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
+import { wsService } from '@/services/websocket'
 import { getWorld } from '@/api/actions'
 
 import agentImg from '@/assets/images/agent.png'
@@ -145,25 +156,16 @@ import stoveImg from '@/assets/images/stations/stove.png'
 import tableImg from '@/assets/images/stations/table.png'
 import wallImg from '@/assets/images/stations/wall.png'
 
-
-
-const props = defineProps({
-  autoRefresh: {
-    type: Boolean,
-    default: false
-  },
-  refreshInterval: {
-    type: Number,
-    default: 3000
-  }
-})
+// 移除 props，不再需要 autoRefresh 和 refreshInterval
+// const props = defineProps({ ... })
 
 const mapData = ref(null)
 const loading = ref(false)
 const hoveredCell = ref(null)
-let refreshTimer = null
+const isConnected = ref(false)
+const unsubscribers = []
 
-// 加载地图数据
+// 加载地图数据（手动刷新时调用）
 const loadMapData = async () => {
   loading.value = true
   try {
@@ -179,6 +181,12 @@ const loadMapData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 通过 WebSocket 更新地图（父组件或自动推送调用）
+const updateMap = (data) => {
+  console.log('📍 Updating map from WebSocket push')
+  mapData.value = data
 }
 
 // 生成网格单元格数据
@@ -238,30 +246,13 @@ const getCellClass = (cell) => {
   return 'cell-empty'
 }
 
-// 获取格子显示内容
-const getCellDisplay = (cell) => {
-  if (cell.agent) return '🤖'
-  if (cell.tile) {
-    if (cell.tile.type === 'obstacle') return '🧱'
-    if (cell.tile.name.includes('dispenser')) return '📦'
-    if (cell.tile.name.includes('chopping')) return '🔪'
-    if (cell.tile.name.includes('stove')) return '🔥'
-    if (cell.tile.name.includes('table')) return '🪑'
-    if (cell.tile.name.includes('serving')) return '🪟'
-    if (cell.tile.name.includes('sink')) return '🚰'
-    if (cell.tile.name.includes('plate_return')) return '🍽️'
-  }
-  return ''
-}
-
 // 获取格子显示的图片
 const getCellImage = (cell) => {
   if (cell.agent) {
     if (cell.agent.name.includes('1')) return agent1Img
     if (cell.agent.name.includes('2')) return agent2Img
     if (cell.agent.name.includes('3')) return agent3Img
-    return agentImg // 默认返回 agentImg
-
+    return agentImg
   }
   
   if (cell.tile) {
@@ -316,41 +307,38 @@ const formatItem = (item) => {
   return JSON.stringify(item)
 }
 
-// 自动刷新
-const startAutoRefresh = () => {
-  if (props.autoRefresh && !refreshTimer) {
-    refreshTimer = setInterval(loadMapData, props.refreshInterval)
-  }
-}
-
-const stopAutoRefresh = () => {
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
-    refreshTimer = null
-  }
-}
-
-watch(() => props.autoRefresh, (newVal) => {
-  if (newVal) {
-    startAutoRefresh()
-  } else {
-    stopAutoRefresh()
-  }
-})
-
+// 生命周期钩子
 onMounted(() => {
-  loadMapData()
-  if (props.autoRefresh) {
-    startAutoRefresh()
+  // 订阅连接状态
+  const unsubscribeConnected = wsService.subscribe('connected', (data) => {
+    isConnected.value = data.connected
+  })
+  unsubscribers.push(unsubscribeConnected)
+  
+  // 订阅地图更新（WebSocket 推送）
+  const unsubscribeMapUpdate = wsService.subscribe('map_update', (data) => {
+    console.log('🗺️ Map update received via WebSocket')
+    updateMap(data)
+  })
+  unsubscribers.push(unsubscribeMapUpdate)
+  
+  // 初始化连接状态
+  isConnected.value = wsService.getConnectionState()
+  
+  // 初次加载地图数据（如果 WebSocket 还没发送初始数据）
+  if (!mapData.value) {
+    loadMapData()
   }
 })
 
 onUnmounted(() => {
-  stopAutoRefresh()
+  // 清理所有订阅
+  unsubscribers.forEach(unsub => unsub())
 })
 
 // 暴露方法给父组件
 defineExpose({
+  updateMap,
   loadMapData,
   mapData
 })
@@ -497,7 +485,6 @@ defineExpose({
 .cell-dispenser {
   background: linear-gradient(135deg, #ecae1e 0%, #c08b10 100%);
   border: 2px solid #bf7103;
-  /* background: #c17a09; */
 }
 
 .cell-chopping {
@@ -527,7 +514,6 @@ defineExpose({
   border: 2px solid #67c23a;
 }
 
-/* 悬浮提示居中显示 */
 .cell-tooltip-wrapper {
   position: absolute;
   top: 50%;

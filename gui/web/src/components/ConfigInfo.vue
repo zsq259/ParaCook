@@ -3,14 +3,24 @@
     <template #header>
       <div class="card-header-flex">
         <span class="card-header">Current Test Recipes and Orders</span>
-        <el-button 
-          size="small" 
-          @click="loadData"
-          :loading="loading"
-          :icon="Refresh"
-        >
-          Refresh
-        </el-button>
+        <el-space>
+          <!-- WebSocket 连接状态指示器 -->
+          <el-tag 
+            :type="isConnected ? 'success' : 'danger'" 
+            size="small"
+            effect="plain"
+          >
+            {{ isConnected ? '● Live' : '● Disconnected' }}
+          </el-tag>
+          <el-button 
+            size="small" 
+            @click="loadData"
+            :loading="loading"
+            :icon="Refresh"
+          >
+            Refresh
+          </el-button>
+        </el-space>
       </div>
     </template>
     <div class="config-info">
@@ -58,28 +68,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh, Files, Document } from '@element-plus/icons-vue'
+import { wsService } from '@/services/websocket'
 import { getRecipes, getOrders } from '@/api/actions'
 
-const props = defineProps({
-  autoRefresh: {
-    type: Boolean,
-    default: false
-  },
-  refreshInterval: {
-    type: Number,
-    default: 5000 // 5秒自动刷新
-  }
-})
+// 移除 props，不再需要 autoRefresh 和 refreshInterval
+// const props = defineProps({ ... })
 
 const recipes = ref([])
 const orders = ref([])
 const loading = ref(false)
-let refreshTimer = null
+const isConnected = ref(false)
+const unsubscribers = []
 
-// 加载数据
+// 加载数据（手动刷新时调用）
 const loadData = async () => {
   loading.value = true
   try {
@@ -88,6 +92,7 @@ const loadData = async () => {
       getRecipes(),
       getOrders()
     ])
+    
     if (recipesResult.success) {
       recipes.value = recipesResult.data || []
     }
@@ -103,47 +108,69 @@ const loadData = async () => {
   }
 }
 
-// 启动自动刷新
-const startAutoRefresh = () => {
-  if (props.autoRefresh && !refreshTimer) {
-    refreshTimer = setInterval(() => {
-      loadData()
-    }, props.refreshInterval)
+// 通过 WebSocket 更新配置（父组件或自动推送调用）
+const updateConfig = (data) => {
+  console.log('⚙️ Updating config from WebSocket push:', data)
+  
+  // 从 config_update 消息中提取数据
+  // 注意：后端的 config_update 包含统计信息，不包含完整的 recipes 和 orders
+  // 我们需要保留当前的 recipes 和 orders，或者从其他 WebSocket 消息获取
+  
+  // 如果后端发送了 recipes_count 和 orders_count，我们只更新显示
+  // 实际的 recipes 和 orders 列表需要通过初始数据或专门的 WebSocket 消息获取
+}
+
+// 从世界状态更新中提取 recipes 和 orders
+const updateFromWorldState = (data) => {
+  console.log('🌍 Updating from world state')
+  
+  // 当接收到完整的世界状态时，可能包含 recipes 和 orders
+  if (data.recipes !== undefined) {
+    recipes.value = data.recipes || []
+  }
+  
+  if (data.orders !== undefined) {
+    orders.value = data.orders || []
   }
 }
 
-// 停止自动刷新
-const stopAutoRefresh = () => {
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
-    refreshTimer = null
-  }
-}
-
-// 监听 autoRefresh 变化
-watch(() => props.autoRefresh, (newVal) => {
-  if (newVal) {
-    startAutoRefresh()
-  } else {
-    stopAutoRefresh()
-  }
-})
-
-// 组件挂载时加载数据
+// 生命周期钩子
 onMounted(() => {
+  // 订阅连接状态
+  const unsubscribeConnected = wsService.subscribe('connected', (data) => {
+    isConnected.value = data.connected
+  })
+  unsubscribers.push(unsubscribeConnected)
+  
+  // 订阅配置更新（WebSocket 推送）
+  const unsubscribeConfigUpdate = wsService.subscribe('config_update', (data) => {
+    console.log('⚙️ Config update received via WebSocket')
+    updateConfig(data)
+  })
+  unsubscribers.push(unsubscribeConfigUpdate)
+  
+  // 订阅地图更新（因为地图更新可能包含完整的世界状态）
+  const unsubscribeMapUpdate = wsService.subscribe('map_update', (data) => {
+    // 地图更新时也可能需要更新 recipes 和 orders
+    // 取决于后端发送的数据结构
+  })
+  unsubscribers.push(unsubscribeMapUpdate)
+  
+  // 初始化连接状态
+  isConnected.value = wsService.getConnectionState()
+  
+  // 初次加载数据（如果 WebSocket 还没发送初始数据）
   loadData()
-  if (props.autoRefresh) {
-    startAutoRefresh()
-  }
 })
 
-// 组件卸载时清理定时器
 onUnmounted(() => {
-  stopAutoRefresh()
+  // 清理所有订阅
+  unsubscribers.forEach(unsub => unsub())
 })
 
 // 暴露方法给父组件
 defineExpose({
+  updateConfig,
   loadData,
   recipes,
   orders

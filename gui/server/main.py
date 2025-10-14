@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, List, Any, Optional
 from collections import deque
+from enum import Enum
+from datetime import datetime
 import json
 import asyncio
 
@@ -23,6 +25,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# WebSocket 消息类型
+class WSMessageType(str, Enum):
+    """WebSocket 消息类型"""
+    LOG = "log"
+    TASK_STATUS = "task_status"
+    MAP_UPDATE = "map_update"
+    CONFIG_UPDATE = "config_update"
+    AGENTS_UPDATE = "agents_update"
+    ACTIONS_UPDATE = "actions_update"
+    SYSTEM_RESET = "system_reset"
+    PING = "ping"
+    PONG = "pong"
+    CONNECTED = "connected"
 
 # 全局状态
 class ServerState:
@@ -62,38 +78,158 @@ class LogMessage(BaseModel):
 # WebSocket 连接管理
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        self.log_connections: set = set()
+        self.connections: set[WebSocket] = set()
 
     async def connect(self, websocket: WebSocket):
+        """接受新的 WebSocket 连接"""
         await websocket.accept()
-        self.active_connections.append(websocket)
+        self.connections.add(websocket)
+        print(f"WebSocket connected. Total connections: {len(self.connections)}")
+        
+        # 发送初始数据给新连接
+        await self.send_initial_data(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        """断开 WebSocket 连接"""
+        self.connections.discard(websocket)
+        print(f"WebSocket disconnected. Total connections: {len(self.connections)}")
 
-    async def connect_log(self, websocket: WebSocket):
-        await websocket.accept()
-        self.log_connections.add(websocket)
+    async def send_initial_data(self, websocket: WebSocket):
+        """向新连接发送当前所有状态"""
+        try:
+            print("="*60)
+            print("📤 Sending initial data to new WebSocket client...")
+            
+            # 1. 发送连接成功消息
+            print("  1️⃣ Sending connection confirmation...")
+            await websocket.send_json({
+                "type": WSMessageType.CONNECTED,
+                "data": {
+                    "message": "Connected to ParaCook server",
+                    "connected": True
+                },
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # 2. 发送历史日志
+            log_count = len(state.logs)
+            print(f"  2️⃣ Sending {log_count} log entries...")
+            for log_entry in state.logs:
+                await websocket.send_json({
+                    "type": WSMessageType.LOG,
+                    "data": log_entry,
+                    "timestamp": datetime.now().isoformat()
+                })
+            
+            # 3. 发送任务状态
+            print(f"  3️⃣ Sending task status (completed={state.completed})...")
+            await websocket.send_json({
+                "type": WSMessageType.TASK_STATUS,
+                "data": {
+                    "completed": state.completed,
+                    "should_execute": state.should_execute
+                },
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # 4. 发送地图数据
+            if state.world_state:
+                print(f"  4️⃣ Sending world state (tiles={len(state.world_state.get('tiles', []))})...")
+                await websocket.send_json({
+                    "type": WSMessageType.MAP_UPDATE,
+                    "data": state.world_state,
+                    "timestamp": datetime.now().isoformat()
+                })
+            else:
+                print(f"  4️⃣ ⚠️ No world state available")
+            
+            # 5. 发送配置信息
+            config_data = self._get_config_data()
+            print(f"  5️⃣ Sending config (agents={config_data.get('num_agents')}, recipes={config_data.get('recipes_count')})...")
+            await websocket.send_json({
+                "type": WSMessageType.CONFIG_UPDATE,
+                "data": config_data,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # 6. 发送 agent 列表
+            print(f"  6️⃣ Sending agents: {state.agents}")
+            await websocket.send_json({
+                "type": WSMessageType.AGENTS_UPDATE,
+                "data": state.agents,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # 7. 发送当前动作
+            if state.current_actions:
+                action_count = sum(len(acts) for acts in state.current_actions.values())
+                print(f"  7️⃣ Sending actions ({action_count} total actions for {len(state.current_actions)} agents)...")
+                await websocket.send_json({
+                    "type": WSMessageType.ACTIONS_UPDATE,
+                    "data": {"actions": state.current_actions},
+                    "timestamp": datetime.now().isoformat()
+                })
+            else:
+                print(f"  7️⃣ No actions to send")
+            
+            print("✅ Initial data sent successfully!")
+            print(f"   Summary:")
+            print(f"   - Logs: {log_count}")
+            print(f"   - Agents: {state.agents}")
+            print(f"   - Recipes: {state.recipes}")
+            print(f"   - Orders: {state.orders}")
+            print(f"   - Task completed: {state.completed}")
+            print("="*60)
+            
+        except Exception as e:
+            print(f"❌ Error sending initial data: {e}")
+            import traceback
+            traceback.print_exc()
 
-    def disconnect_log(self, websocket: WebSocket):
-        self.log_connections.discard(websocket)
+    def _get_config_data(self) -> dict:
+        """获取配置数据"""
+        return {
+            "num_agents": len(state.agents),
+            "world_steps": len(state.logs),
+            "actions_count": sum(len(acts) for acts in state.current_actions.values()),
+            "status": "completed" if state.completed else "running",
+            "recipes_count": len(state.recipes),
+            "orders_count": len(state.orders),
+            "recipes": state.recipes,
+            "orders": state.orders
+        }
 
-    async def broadcast(self, message: dict):
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-            except:
-                pass
-
-    async def broadcast_log(self, log_entry: dict):
+    async def broadcast(self, message_type: WSMessageType, data: Any):
+        """广播消息到所有连接"""
+        if not self.connections:
+            return
+            
+        message = {
+            "type": message_type,
+            "data": data,
+            "timestamp": datetime.now().isoformat()
+        }
+        
         disconnected = set()
-        for ws in self.log_connections:
+        for ws in self.connections:
             try:
-                await ws.send_json(log_entry)
-            except:
+                await ws.send_json(message)
+            except WebSocketDisconnect:
                 disconnected.add(ws)
-        self.log_connections.difference_update(disconnected)
+            except Exception as e:
+                print(f"Error broadcasting to client: {e}")
+                disconnected.add(ws)
+        
+        # 移除断开的连接
+        self.connections.difference_update(disconnected)
+        
+        if disconnected:
+            print(f"Removed {len(disconnected)} disconnected clients")
+
+    async def add_log(self, log_entry: dict):
+        """添加日志并广播"""
+        state.logs.append(log_entry)
+        await self.broadcast(WSMessageType.LOG, log_entry)
 
 manager = ConnectionManager()
 
@@ -104,7 +240,8 @@ async def root():
     return {
         "message": "ParaCook Human Agent API Server",
         "version": "1.0.0",
-        "status": "running"
+        "status": "running",
+        "websocket_connections": len(manager.connections)
     }
 
 @app.get("/api/actions")
@@ -116,10 +253,20 @@ async def get_actions():
 async def save_actions(data: ActionsData):
     """保存动作列表"""
     state.current_actions = data.actions
-    await manager.broadcast({
-        "type": "actions_updated",
-        "data": state.current_actions
-    })
+    
+    # 广播动作更新
+    await manager.broadcast(
+        WSMessageType.ACTIONS_UPDATE,
+        {"actions": state.current_actions}
+    )
+    
+    # 广播配置更新（因为动作数量变了）
+    config_data = manager._get_config_data()
+    await manager.broadcast(
+        WSMessageType.CONFIG_UPDATE,
+        config_data
+    )
+    
     return {"success": True, "message": "Actions saved"}
 
 @app.post("/api/actions/add")
@@ -131,11 +278,18 @@ async def add_action(agent: str, action: Action):
     action_dict = action.model_dump(exclude_none=True)
     state.current_actions[agent].append(action_dict)
     
-    await manager.broadcast({
-        "type": "action_added",
-        "agent": agent,
-        "action": action_dict
-    })
+    # 广播动作更新
+    await manager.broadcast(
+        WSMessageType.ACTIONS_UPDATE,
+        {"actions": state.current_actions}
+    )
+    
+    # 广播配置更新
+    config_data = manager._get_config_data()
+    await manager.broadcast(
+        WSMessageType.CONFIG_UPDATE,
+        config_data
+    )
     
     return {
         "success": True, 
@@ -157,11 +311,18 @@ async def remove_action(agent: str, index: int):
     if len(state.current_actions[agent]) == 0:
         del state.current_actions[agent]
     
-    await manager.broadcast({
-        "type": "action_removed",
-        "agent": agent,
-        "index": index
-    })
+    # 广播动作更新
+    await manager.broadcast(
+        WSMessageType.ACTIONS_UPDATE,
+        {"actions": state.current_actions}
+    )
+    
+    # 广播配置更新
+    config_data = manager._get_config_data()
+    await manager.broadcast(
+        WSMessageType.CONFIG_UPDATE,
+        config_data
+    )
     
     return {"success": True, "data": state.current_actions}
 
@@ -169,7 +330,20 @@ async def remove_action(agent: str, index: int):
 async def clear_actions():
     """清空所有动作"""
     state.current_actions = {}
-    await manager.broadcast({"type": "actions_cleared"})
+    
+    # 广播动作更新
+    await manager.broadcast(
+        WSMessageType.ACTIONS_UPDATE,
+        {"actions": {}}
+    )
+    
+    # 广播配置更新
+    config_data = manager._get_config_data()
+    await manager.broadcast(
+        WSMessageType.CONFIG_UPDATE,
+        config_data
+    )
+    
     return {"success": True, "message": "All actions cleared"}
 
 @app.post("/api/actions/execute")
@@ -179,10 +353,16 @@ async def execute_actions():
         return {"success": False, "message": "No actions to execute"}
     
     state.should_execute = True
-    await manager.broadcast({
-        "type": "execute_triggered",
-        "data": state.current_actions
-    })
+    
+    # 广播执行状态
+    await manager.broadcast(
+        WSMessageType.TASK_STATUS,
+        {
+            "completed": state.completed,
+            "should_execute": state.should_execute,
+            "executing": True
+        }
+    )
     
     return {"success": True, "message": "Execution triggered"}
 
@@ -218,16 +398,29 @@ async def update_world(data: WorldState):
     """更新世界状态（由 Human.py 调用）"""
     try:
         print(f"Received world update: agents={data.agents}, orders count={len(data.orders)}")
-        state.world_state = data.world  # 这里应该包含完整的地图数据
+        state.world_state = data.world
         state.agents = data.agents
         state.recipes = data.recipes
         state.orders = data.orders
         
-        # 广播世界状态更新
-        await manager.broadcast({
-            "type": "world_updated",
-            "data": data.world
-        })
+        # 广播地图更新
+        await manager.broadcast(
+            WSMessageType.MAP_UPDATE,
+            data.world
+        )
+        
+        # 广播 agent 列表更新
+        await manager.broadcast(
+            WSMessageType.AGENTS_UPDATE,
+            state.agents
+        )
+        
+        # 广播配置更新
+        config_data = manager._get_config_data()
+        await manager.broadcast(
+            WSMessageType.CONFIG_UPDATE,
+            config_data
+        )
         
         return {"success": True, "message": "World state updated"}
     except Exception as e:
@@ -261,19 +454,20 @@ async def get_logs(limit: int = 100):
 async def add_log(log: LogMessage):
     """添加日志（由 Human.py 调用）"""
     log_entry = log.model_dump()
-    state.logs.append(log_entry)
-    
-    # 【修改】通过 WebSocket 广播日志，而不是普通广播
-    await manager.broadcast_log(log_entry)
-    
+    await manager.add_log(log_entry)
     return {"success": True}
 
 @app.delete("/api/logs")
 async def clear_logs():
     """清空日志"""
     state.logs.clear()
-    # 【修改】通知所有日志客户端清空
-    await manager.broadcast_log({"type": "clear"})
+    
+    # 广播日志清空
+    await manager.broadcast(
+        WSMessageType.LOG,
+        {"type": "clear"}
+    )
+    
     return {"success": True, "message": "Logs cleared"}
 
 @app.get("/api/logs/history")
@@ -288,10 +482,23 @@ async def get_log_history():
 async def mark_task_complete():
     """标记任务完成（由 Human.py 调用）"""
     state.completed = True
-    await manager.broadcast({
-        "type": "task_completed",
-        "message": "All orders completed successfully!"
-    })
+    
+    # 广播任务完成
+    await manager.broadcast(
+        WSMessageType.TASK_STATUS,
+        {
+            "completed": True,
+            "message": "All orders completed successfully!"
+        }
+    )
+    
+    # 广播配置更新
+    config_data = manager._get_config_data()
+    await manager.broadcast(
+        WSMessageType.CONFIG_UPDATE,
+        config_data
+    )
+    
     return {"success": True}
 
 @app.get("/api/task/status")
@@ -306,6 +513,13 @@ async def get_task_status():
 async def reset_task():
     """重置任务状态"""
     state.completed = False
+    
+    # 广播任务状态更新
+    await manager.broadcast(
+        WSMessageType.TASK_STATUS,
+        {"completed": False}
+    )
+    
     return {"success": True}
 
 @app.post("/api/reset")
@@ -319,17 +533,41 @@ async def reset_all():
         state.world_state = None
         state.logs.clear()
         state.completed = False
+        state.current_actions = {}
         
-        # 广播重置消息
-        await manager.broadcast_log({"type": "clear"})
-
-        await manager.broadcast({
-            "type": "system_reset",
-            "message": "System has been reset to initial state"
-        })
+        # 广播系统重置
+        await manager.broadcast(
+            WSMessageType.SYSTEM_RESET,
+            {
+                "message": "System has been reset to initial state",
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+        
+        # 广播日志清空
+        await manager.broadcast(
+            WSMessageType.LOG,
+            {"type": "clear"}
+        )
+        
+        # 广播任务状态重置
+        await manager.broadcast(
+            WSMessageType.TASK_STATUS,
+            {"completed": False, "reset": True}
+        )
+        
+        # 广播配置更新
+        config_data = manager._get_config_data()
+        await manager.broadcast(
+            WSMessageType.CONFIG_UPDATE,
+            config_data
+        )
         
         return {"success": True, "message": "Reset signal sent"}
     except Exception as e:
+        print(f"Error in reset_all: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/should_reset")
@@ -346,44 +584,35 @@ async def confirm_reset():
     state.should_reset = False
     return {"success": True}
 
-# 日志专用 WebSocket 端点
-@app.websocket("/ws/logs")
-async def websocket_logs(websocket: WebSocket):
-    """WebSocket 端点用于实时日志推送"""
-    await manager.connect_log(websocket)
-    
-    try:
-        # 首先发送缓冲区中的历史日志
-        for log_entry in state.logs:
-            await websocket.send_json(log_entry)
-        
-        # 保持连接，接收心跳
-        while True:
-            try:
-                # 接收心跳消息(避免连接超时)
-                await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
-            except asyncio.TimeoutError:
-                # 发送 ping 保持连接
-                await websocket.send_json({"type": "ping"})
-    except WebSocketDisconnect:
-        pass
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-    finally:
-        manager.disconnect_log(websocket)
+@app.get("/api/config")
+async def get_config_info():
+    """获取配置信息"""
+    config_data = manager._get_config_data()
+    return {"success": True, "data": config_data}
 
-# WebSocket 端点
+# 统一的 WebSocket 端点
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket 连接，用于实时推送"""
-    await manager.connect(websocket)
+    await manager.connect(websocket)  # 这里面已经调用了 send_initial_data
+    
     try:
         while True:
+            # 保持连接并处理 ping
             data = await websocket.receive_text()
+            
+            if data == "ping":
+                await websocket.send_json({
+                    "type": "pong",
+                    "timestamp": datetime.now().isoformat()
+                })
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
 
 if __name__ == "__main__":
     import uvicorn
     print(f"Starting FastAPI server on http://{API_HOST}:{API_PORT}")
+    print(f"WebSocket endpoint: ws://{API_HOST}:{API_PORT}/ws")
     uvicorn.run(app, host=API_HOST, port=API_PORT)

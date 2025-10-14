@@ -3,12 +3,11 @@
     <template #header>
       <div class="card-header-flex">
         <span class="card-header">
-          <!-- 【修改】更新标题和添加条目统计 -->
           Execution Logs
           <el-tag size="small" style="margin-left: 10px">{{ logEntries.length }} entries</el-tag>
         </span>
         <el-space>
-          <!-- 【修改】添加连接状态指示器 -->
+          <!-- WebSocket 连接状态指示器 -->
           <el-tag 
             :type="isConnected ? 'success' : 'danger'" 
             size="small"
@@ -26,7 +25,6 @@
             <el-icon style="margin-right: 5px"><CopyDocument /></el-icon>
             Copy
           </el-button>
-          <!-- 【新增】清空按钮 -->
           <el-button 
             size="small" 
             type="danger" 
@@ -40,7 +38,6 @@
       </div>
     </template>
 
-    <!-- 【修改】完全重写日志容器 -->
     <div ref="logContainer" class="log-container">
       <div 
         v-for="(entry, index) in logEntries" 
@@ -51,11 +48,10 @@
         <span :class="['log-level', `level-${entry.level.toLowerCase()}`]">
           [{{ entry.level }}]
         </span>
-        <!-- 【新增】使用 v-html 渲染带颜色的 HTML -->
         <span class="log-message" v-html="entry.formattedMessage"></span>
       </div>
       
-      <!-- 【修改】空状态显示 -->
+      <!-- 空状态显示 -->
       <div v-if="logEntries.length === 0" class="empty-log">
         <el-empty 
           description="No execution logs yet. Execute an action plan to see logs."
@@ -73,28 +69,19 @@
 </template>
 
 <script setup>
-// 【修改】完全重写 script 部分
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CopyDocument, Document } from '@element-plus/icons-vue'
-import config from '../../../../config/gui_config.json'
+import { wsService } from '@/services/websocket'
+import { clearLogs as clearLogsApi } from '@/api/actions'
 
-const API_HOST = config.api.host
-const API_PORT = config.api.port
-const WS_LOGS_URL = `ws://${API_HOST}:${API_PORT}/ws/logs`
-const API_URL = `http://${API_HOST}:${API_PORT}/api`
-
-// 【删除】移除 props 定义
-// const props = defineProps({ log: { type: String, default: '' } })
-
-// 【新增】状态管理
+// 状态管理
 const logContainer = ref(null)
 const logEntries = ref([])
 const isConnected = ref(false)
-let ws = null
-let reconnectTimer = null
+const unsubscribers = []
 
-// 【新增】ANSI 颜色映射表
+// ANSI 颜色映射表
 const ansiColorMap = {
   '30': '#2e3436', '31': '#cc0000', '32': '#4e9a06', '33': '#c4a000',
   '34': '#3465a4', '35': '#75507b', '36': '#06989a', '37': '#d3d7cf',
@@ -104,14 +91,14 @@ const ansiColorMap = {
   '44': '#3465a4', '45': '#75507b', '46': '#06989a', '47': '#d3d7cf',
 }
 
-// 【新增】转义 HTML
+// 转义 HTML
 const escapeHtml = (text) => {
   const div = document.createElement('div')
   div.textContent = text
   return div.innerHTML
 }
 
-// 【新增】ANSI 转 HTML
+// ANSI 转 HTML
 const ansiToHtml = (text) => {
   if (!text) return ''
   
@@ -171,129 +158,32 @@ const ansiToHtml = (text) => {
   return html || escapeHtml(text)
 }
 
-// 【新增】连接 WebSocket
-const connectWebSocket = () => {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    return
-  }
-  
-  try {
-    ws = new WebSocket(WS_LOGS_URL)
-    
-    ws.onopen = () => {
-      console.log('Log WebSocket connected')
-      isConnected.value = true
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer)
-        reconnectTimer = null
-      }
-      
-      // 发送心跳
-      const heartbeat = setInterval(() => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send('ping')
-        } else {
-          clearInterval(heartbeat)
-        }
-      }, 15000)
-    }
-    
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        
-        if (data.type === 'clear') {
-          logEntries.value = []
-          return
-        }
-        
-        if (data.type === 'ping') {
-          return
-        }
-        
-        // 转换 ANSI 颜色为 HTML
-        data.formattedMessage = ansiToHtml(data.message)
-        
-        logEntries.value.push(data)
-        
-        // 限制日志条数
-        if (logEntries.value.length > 2000) {
-          logEntries.value.splice(0, 500)
-        }
-        
-        // 自动滚动到底部
-        nextTick(() => {
-          if (logContainer.value) {
-            const container = logContainer.value
-            const shouldScroll = container.scrollHeight - container.scrollTop - container.clientHeight < 100
-            if (shouldScroll) {
-              container.scrollTop = container.scrollHeight
-            }
-          }
-        })
-      } catch (error) {
-        console.error('Failed to parse log message:', error)
+// 自动滚动到底部
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (logContainer.value) {
+      const container = logContainer.value
+      const shouldScroll = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+      if (shouldScroll) {
+        container.scrollTop = container.scrollHeight
       }
     }
-    
-    ws.onerror = (error) => {
-      console.error('Log WebSocket error:', error)
-      isConnected.value = false
-    }
-    
-    ws.onclose = () => {
-      console.log('Log WebSocket disconnected, reconnecting...')
-      isConnected.value = false
-      ws = null
-      reconnectTimer = setTimeout(connectWebSocket, 3000)
-    }
-  } catch (error) {
-    console.error('Failed to connect WebSocket:', error)
-    isConnected.value = false
-    reconnectTimer = setTimeout(connectWebSocket, 3000)
-  }
+  })
 }
 
-// 【新增】加载历史日志
-const loadHistoryLogs = async () => {
-  try {
-    const response = await fetch(`${API_URL}/logs/history`)
-    const result = await response.json()
-    
-    if (result.success && result.data) {
-      logEntries.value = result.data.map(entry => ({
-        ...entry,
-        formattedMessage: ansiToHtml(entry.message)
-      }))
-      
-      nextTick(() => {
-        if (logContainer.value) {
-          logContainer.value.scrollTop = logContainer.value.scrollHeight
-        }
-      })
-    }
-  } catch (error) {
-    console.error('Failed to load history logs:', error)
-  }
-}
-
-// 【新增】清空日志
+// 清空日志
 const clearLogs = async () => {
   try {
     logEntries.value = []
-    const response = await fetch(`${API_URL}/logs`, {
-      method: 'DELETE' 
-    })
-    const result = await response.json()
-    if (result.success) {
-      ElMessage.success('Logs cleared')
-    }
+    await clearLogsApi()
+    ElMessage.success('Logs cleared')
   } catch (error) {
     console.error('Failed to clear logs:', error)
+    ElMessage.error('Failed to clear logs')
   }
 }
 
-// 【修改】复制日志功能
+// 复制日志功能
 const copyLog = async () => {
   try {
     // 提取纯文本
@@ -308,18 +198,47 @@ const copyLog = async () => {
   }
 }
 
-// 【新增】生命周期钩子
+// 生命周期钩子
 onMounted(() => {
-  connectWebSocket()
+  // 订阅连接状态
+  const unsubscribeConnected = wsService.subscribe('connected', (data) => {
+    isConnected.value = data.connected
+  })
+  unsubscribers.push(unsubscribeConnected)
+  
+  // 订阅日志消息
+  const unsubscribeLog = wsService.subscribe('log', (data) => {
+    // 处理清空日志
+    if (data.type === 'clear') {
+      logEntries.value = []
+      return
+    }
+    
+    // 添加格式化的日志
+    const logEntry = {
+      ...data,
+      formattedMessage: ansiToHtml(data.message)
+    }
+    
+    logEntries.value.push(logEntry)
+    
+    // 限制日志条数，防止内存溢出
+    if (logEntries.value.length > 2000) {
+      logEntries.value.splice(0, 500) // 删除最旧的 500 条
+    }
+    
+    // 自动滚动
+    scrollToBottom()
+  })
+  unsubscribers.push(unsubscribeLog)
+  
+  // 初始化连接状态
+  isConnected.value = wsService.getConnectionState()
 })
 
 onUnmounted(() => {
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer)
-  }
-  if (ws) {
-    ws.close()
-  }
+  // 清理所有订阅
+  unsubscribers.forEach(unsub => unsub())
 })
 </script>
 
@@ -351,7 +270,6 @@ onUnmounted(() => {
   align-items: center;
 }
 
-/* 【修改】日志容器样式 */
 .log-container {
   height: 100%;
   overflow-y: auto;
@@ -364,7 +282,6 @@ onUnmounted(() => {
   color: #d4d4d4;
 }
 
-/* 【新增】日志条目样式 */
 .log-entry {
   margin-bottom: 2px;
   display: flex;
@@ -387,7 +304,7 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-/* 【新增】日志级别颜色 */
+/* 日志级别颜色 */
 .level-debug { color: #858585; }
 .level-info { color: #4ec9b0; }
 .level-warning { color: #dcdcaa; }
@@ -401,13 +318,12 @@ onUnmounted(() => {
   color: #d4d4d4;
 }
 
-/* 【新增】保持 v-html 中的样式 */
+/* 保持 v-html 中的样式 */
 .log-message :deep(span) {
   font-family: inherit;
   line-height: inherit;
 }
 
-/* 【修改】空状态样式 */
 .empty-log {
   display: flex;
   align-items: center;
@@ -420,7 +336,7 @@ onUnmounted(() => {
   color: #858585;
 }
 
-/* 【新增】滚动条样式 */
+/* 滚动条样式 */
 .log-container::-webkit-scrollbar {
   width: 10px;
 }

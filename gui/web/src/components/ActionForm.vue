@@ -224,10 +224,11 @@ const handleSubmit = async () => {
     const result = await apiAddAction(formData.agent, action)
     
     if (result.success) {
-      emit('add-action', {
-        agent: formData.agent,
-        action: action
-      })
+      // emit('add-action', {
+      //   agent: formData.agent,
+      //   action: action
+      // })
+      emit('action-added')
       
       ElMessage.success('Action added successfully')
       resetForm()
