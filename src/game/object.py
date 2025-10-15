@@ -486,6 +486,13 @@ class PlateReturn(Station):
             self.dirty_plates_sum += 1
             logger.info(f"PlateReturn {self.name} generated a dirty plate, total now {self.dirty_plates_sum}")
 
+    def to_json(self):
+        data = super().to_json()
+        data.update({
+            "dirty_plates_sum": self.dirty_plates_sum
+        })
+        return data
+
 class Trash(Station):
     """Trash can, discard items in hand or in container"""
     def __init__(self, name: str, x: int, y: int):
@@ -559,6 +566,7 @@ class Agent(GameObject):
             "name": self.name,
             "x": self.x,
             "y": self.y,
+            "current_action": self.current_action,
             "holding": None
         }
         if self.holding is not None:

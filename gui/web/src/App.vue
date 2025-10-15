@@ -73,6 +73,11 @@
                       Executing...
                     </template>
                   </el-button>
+
+                  <HistoryPlayer 
+                    :history="executionHistory"
+                    @step-change="handleHistoryStepChange"
+                  />
                 </div>
               </el-col>
             </el-row>
@@ -92,6 +97,7 @@ import ConfigInfo from './components/ConfigInfo.vue'
 import ActionEditor from './components/ActionEditor.vue'
 import ActionForm from './components/ActionForm.vue'
 import LogViewer from './components/LogViewer.vue'
+import HistoryPlayer from './components/HistoryPlayer.vue'
 import { useWebSocket } from './composables/useWebSocket'
 import { 
   executeActions, 
@@ -115,6 +121,7 @@ const actions = ref({})
 const executing = ref(false)
 const taskCompleted = ref(false)
 const subscriptionsSetup = ref(false)
+const executionHistory = ref([])
 
 // ========== 通用错误处理 ==========
 const handleApiError = (error, defaultMessage) => {
@@ -178,6 +185,15 @@ const setupSubscriptions = () => {
       actions.value = {}
       ElMessage.success('System has been reset to initial state')
     },
+
+    execution_history: (data) => {
+      log('📊 Execution history received:', data.history?.length, 'steps')
+      executionHistory.value = data.history || []
+      
+      if (executionHistory.value.length > 0) {
+        ElMessage.success(`Loaded ${executionHistory.value.length} execution steps`)
+      }
+    },
     
     connected: (data) => {
       if (data.connected) {
@@ -194,6 +210,11 @@ const setupSubscriptions = () => {
   subscriptionsSetup.value = true
   log('✅ All subscriptions set up')
   log('📊 Final stats:', getStats())
+}
+
+const handleHistoryStepChange = (worldState) => {
+  log('🎬 History step changed, updating map with state:', worldState)
+  mapViewerRef.value?.updateMap(worldState)
 }
 
 // 监听连接状态（优化版）

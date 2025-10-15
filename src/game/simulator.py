@@ -1,5 +1,6 @@
 # simulator.py - Action Scheduling System
 
+from copy import deepcopy
 from typing import Dict, List
 from heapq import heappop, heappush
 
@@ -32,6 +33,7 @@ class Simulator:
         for agent_name in self.world.agents:
             time0.agents.append(agent_name)
         self.event_queue.append(time0)
+        self.state_history: List[dict] = []  # To record the state at each time point
 
     def reset_plan(self, plan: Dict[str, List[Dict]]):
         """Reset the plan of all agents"""
@@ -250,6 +252,11 @@ class Simulator:
 
         self.update_event_queue()
         
+        self.state_history.append({
+            "time": self.current_time,
+            "world": deepcopy(self.world.to_json())
+        })
+
         logger.info(f"{COLOR_CODES['PURPLE']}Observation:{RESET}")
         logger.info(self.status())
         # logger.info(self.world.to_json())
@@ -265,10 +272,10 @@ class Simulator:
                 status += f"Agent {agent_name}: vacant (remaining actions: {len(agent.action_queue)})\n"
             else:
                 if agent.current_action:
-                    status += f"Agent {agent_name}: executing {agent.current_action}, finish at: {agent.finish_time}, remaining actions: "
-                    for act in agent.action_queue:
-                        status += f"{act}, "
-                    status = status.rstrip(", ") + "\n"
+                    status += f"Agent {agent_name}: executing {agent.current_action}, finish at: {agent.finish_time}, remaining actions: {len(agent.action_queue)}\n"
+                    # for act in agent.action_queue:
+                    #     status += f"{act}, "
+                    # status = status.rstrip(", ") + "\n"
                 else:
                     # raise ValueError(f"Agent {agent_name} is not idle but has no current action")
                     logger.warning(f"{COLOR_CODES['YELLOW']}Agent {agent_name} is not idle but has no current action{RESET}")

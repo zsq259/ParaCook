@@ -109,6 +109,9 @@
                   <div v-if="agent.holding !== undefined">
                     <strong>Holding:</strong> {{ agent.holding || 'Nothing' }}
                   </div>
+                  <div v-if="agent.current_action !== undefined">
+                    <strong>Action:</strong> {{ agent.current_action || 'Idle' }}
+                  </div>
                 </div>
               </template>
               <template v-else-if="hoveredCell.data && !Array.isArray(hoveredCell.data)">
@@ -121,11 +124,17 @@
                 <div v-if="hoveredCell.data.holding !== undefined">
                   <strong>Holding:</strong> {{ hoveredCell.data.holding || 'Nothing' }}
                 </div>
+                <div v-if="hoveredCell.data.current_action !== undefined">
+                  <strong>Action:</strong> {{ hoveredCell.data.current_action || 'Idle' }}
+                </div>
                 <div v-if="hoveredCell.data.item">
                   <strong>Item:</strong> {{ formatItem(hoveredCell.data.item) }}
                 </div>
                 <div v-if="hoveredCell.data.in_use">
                   <strong>In Use:</strong> {{ hoveredCell.data.current_user || 'Yes' }}
+                </div>
+                <div v-if="hoveredCell.data.dirty_plates_sum !== undefined">
+                  <strong>Dirty Plates:</strong> {{ hoveredCell.data.dirty_plates_sum }}
                 </div>
               </template>
             </div>

@@ -322,6 +322,19 @@ class HumanAgent(Agent):
                         continue
                     
                     simulator.run_simulation()
+
+                    # 🆕 收集并发送执行历史
+                    execution_history = simulator.state_history
+                    logger.info(f"Collected {len(execution_history)} time steps from simulation")
+                    
+                    # 一次性发送历史到服务器
+                    history_result = self._call_api("POST", "/api/world/history", {
+                        "history": execution_history
+                    })
+                    
+                    if history_result and history_result.get("success"):
+                        logger.info("Execution history sent to frontend")
+
                     # 更新世界状态
                     self.update_world_state(simulator)
                     

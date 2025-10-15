@@ -36,6 +36,7 @@ class WSMessageType(str, Enum):
     AGENTS_UPDATE = "agents_update"
     ACTIONS_UPDATE = "actions_update"
     SYSTEM_RESET = "system_reset"
+    EXECUTION_HISTORY = "execution_history"
     PING = "ping"
     PONG = "pong"
     CONNECTED = "connected"
@@ -50,6 +51,7 @@ class ServerState:
         self.orders: List[str] = []
         self.logs: deque = deque(maxlen=1000)
         self.completed = False
+        self.execution_history: List[dict] = []
         self.agent_ws: Optional[WebSocket] = None  # Human.py 的 WebSocket 连接
 
 state = ServerState()
@@ -426,6 +428,23 @@ async def update_world(data: WorldState):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/world/history")
+async def set_execution_history(data: dict):
+    """接收完整的执行历史"""
+    try:
+        state.execution_history = data.get("history", [])
+        
+        # 通过 WebSocket 广播给所有前端
+        await manager.broadcast(
+            WSMessageType.EXECUTION_HISTORY,
+            {"history": state.execution_history}
+        )
+        
+        return {"success": True, "steps": len(state.execution_history)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/agents")
 async def get_agents():
