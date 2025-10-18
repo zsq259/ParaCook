@@ -3,10 +3,10 @@
 from src.agent.model.model import Model
 from src.agent.method.agent import Agent
 from src.game.simulator import Simulator
-from src.utils.logger_config import logger, COLOR_CODES, RESET
+from src.utils.logger_config import logger, log_model_conversation, COLOR_CODES, RESET
 
 class FixedAgent(Agent):
-    def __init__(self, model: Model|None = None):
+    def __init__(self, model: Model|None = None, log_dir: str|None = None):
         pass
 
     def get_actions(self, orders, map_name):
@@ -157,34 +157,17 @@ class FixedAgent(Agent):
                     {"action": "Interact", "target": "table1"},     # Put seaweed on plate, cost 0, current time 18
                     {"action": "Interact", "target": "table1"},     # Pick up plate with seaweed and fish, cost 0, current time 18
                     {"action": "MoveTo", "target": [5, 4]},         # Move to pot, cost 3, current time 21, rice not ready yet
-                    {"action": "Wait", "duration": 8},              # Wait 8 time units, current time 29
-                    {"action": "Interact", "target": "stove"},      # Put cooked rice on plate, cost 0, current time 29
+                    {"action": "Wait", "duration": 6},              # Wait 6 time units, current time 27
+                    {"action": "Interact", "target": "stove"},      # Put cooked rice on plate, cost 0, current time 27
                     # Serve
-                    {"action": "MoveTo", "target": [4, 4]},         # Move to serving window, cost 1, current time 30
-                    {"action": "Interact", "target": "serving_window"}, # Serve, cost 0, current time 30
+                    {"action": "MoveTo", "target": [4, 4]},         # Move to serving window, cost 1, current time 28
+                    {"action": "Interact", "target": "serving_window"}, # Serve, cost 0, current time 28
                 ]
             }
         elif orders == ["pasta_mushroom", "pasta_tomato"] and map_name == "kitchen":
             return {
                 "agent1": [
-                    {"action": "MoveTo", "target": [8, 5]},
-                    {"action": "Interact", "target": "dispenser6"},
-                    {"action": "MoveTo", "target": [2, 1]},
-                    {"action": "Interact", "target": "stove3"},
-                    {"action": "MoveTo", "target": [8, 5]},
-                    {"action": "Interact", "target": "dispenser6"},
-                    {"action": "MoveTo", "target": [1, 4]},
-                    {"action": "Interact", "target": "stove4"},
-                    {"action": "MoveTo", "target": [2, 5]},
-                    {"action": "Interact", "target": "table1"},
-                    {"action": "MoveTo", "target": [1, 6]},
-                    {"action": "Interact", "target": "stove2"},
-                    {"action": "MoveTo", "target": [2, 1]},
-                    {"action": "Interact", "target": "stove3"},
-                    {"action": "MoveTo", "target": [2, 6]},
-                    {"action": "Interact", "target": "serving_window"}
-                ],
-                "agent2": [
+                    {"action": "MoveTo", "target": [3, 6]},
                     {"action": "Interact", "target": "dispenser5"},
                     {"action": "MoveTo", "target": [4, 6]},
                     {"action": "Interact", "target": "chopping_board2"},
@@ -192,20 +175,40 @@ class FixedAgent(Agent):
                     {"action": "Interact", "target": "chopping_board2"},
                     {"action": "MoveTo", "target": [1, 6]},
                     {"action": "Interact", "target": "stove2"},
+                    {"action": "MoveTo", "target": [8, 5]},
+                    {"action": "Interact", "target": "dispenser6"},
+                    {"action": "MoveTo", "target": [2, 1]},
+                    {"action": "Interact", "target": "stove3"},
                     {"action": "MoveTo", "target": [7, 1]},
                     {"action": "Interact", "target": "dispenser2"},
-                    {"action": "MoveTo", "target": [1, 2]},
-                    {"action": "Interact", "target": "chopping_board1"},
-                    {"action": "Process", "target": "chopping_board1"},
-                    {"action": "Interact", "target": "chopping_board1"},
-                    {"action": "MoveTo", "target": [8, 4]},
-                    {"action": "Interact", "target": "stove1"},
-                    {"action": "MoveTo", "target": [7, 2]},
-                    {"action": "Interact", "target": "table2"},
+                    {"action": "MoveTo", "target": [4, 6]},
+                    {"action": "Interact", "target": "chopping_board2"},
+                    {"action": "Process", "target": "chopping_board2"},
+                    {"action": "Interact", "target": "chopping_board2"},
+                    {"action": "MoveTo", "target": [1, 6]},
+                    {"action": "Interact", "target": "stove2"}
+                    ],
+                "agent2": [
+                    {"action": "MoveTo", "target": [8, 5]},
+                    {"action": "Interact", "target": "dispenser6"},
                     {"action": "MoveTo", "target": [1, 4]},
                     {"action": "Interact", "target": "stove4"},
-                    {"action": "MoveTo", "target": [8, 4]},
-                    {"action": "Interact", "target": "stove1"},
+                    {"action": "MoveTo", "target": [4, 5]},
+                    {"action": "Interact", "target": "table1"},
+                    {"action": "MoveTo", "target": [1, 4]},
+                    {"action": "Wait", "duration": 8},
+                    {"action": "Interact", "target": "stove4"},
+                    {"action": "MoveTo", "target": [1, 6]},
+                    {"action": "Interact", "target": "stove2"},
+                    {"action": "MoveTo", "target": [2, 6]},
+                    {"action": "Interact", "target": "serving_window"},
+                    {"action": "MoveTo", "target": [6, 3]},
+                    {"action": "Interact", "target": "table2"},
+                    {"action": "MoveTo", "target": [2, 1]},
+                    {"action": "Interact", "target": "stove3"},
+                    {"action": "MoveTo", "target": [1, 6]},
+                    {"action": "Wait", "duration": 13},
+                    {"action": "Interact", "target": "stove2"},
                     {"action": "MoveTo", "target": [2, 6]},
                     {"action": "Interact", "target": "serving_window"}
                 ]
@@ -216,7 +219,7 @@ class FixedAgent(Agent):
     def run_test(self, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
         world = simulator.world
         plan = self.get_actions(world.orders, world.map_data["name"])
-        logger.info(f"{COLOR_CODES['YELLOW']}Fixed plan: {plan}{RESET}")
+        log_model_conversation(f"{COLOR_CODES['YELLOW']}Fixed plan: {plan}{RESET}")
         simulator.load_plan(plan)
         simulator.run_simulation()
         return self.create_result(simulator, 0)

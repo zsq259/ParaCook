@@ -53,7 +53,6 @@ class GPTWrapper(Model):
             kwargs["response_format"] = config.response_format
         response = client.chat.completions.create(**kwargs)
         logger.info(f"{COLOR_CODES['PURPLE']}Usage: {response.usage}{RESET}")
-        self.log_conversation(messages, response.choices[0].message.content)
         return response.choices[0].message.content
     
     def create(self, client, config: PredictConfig) -> str:
@@ -92,12 +91,6 @@ class GPTWrapper(Model):
             except Exception as e:
                 logger.error(f"Unexpected error: {COLOR_CODES['RED']}{e}{RESET}")
                 raise e
-        if messages is None:
-            messages=[
-                {"role": "system", "content": config.system_prompt or "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ]
-        self.log_conversation(messages, response, log_file=f"logs/{self.name}_conversation.txt")
         return response
     
 def main():

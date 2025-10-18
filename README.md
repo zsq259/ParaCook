@@ -20,11 +20,34 @@ conda activate paracook
 pip install -r requirements.txt
 ```
 
-2. To run the tests:
+2. To run a sample test with a built-in agent:
+
+```bash
+python -m src.main --model gpt-5 --agent CoT --examples burger_basic --orders burger/burger_basic --map config/map_examples/map2.json
+```
+
+3. To run batch tests with different agents and tasks:
 
 ```bash
 ./scripts/test.sh
 ```
+
+## 🧩 Define your agent and test
+
+To define your own agent, please refer to `src/agent/agent.py` for the base class `Agent`, and some other example agents in `src/agent/method/`, such as `IOAgent`. You can create a new agent by inheriting from the base class and implementing the required methods, such as `run_test`.
+You should register your agent in the `name_to_agent` dictionary in `src/main.py`.
+To test your agent, you can modify the test script, use your agent's name in the `--agent` argument.
+
+In `src/game/simulator.py`, we provide an interface for the simulator to interact with agents:
+
+- `submit_plan(actions: Dict[str, List])`: Submit the planned actions for each agent. The `actions` parameter is a dictionary mapping agent names to their respective action lists.
+- `step()`: Advance the simulation to the next event timepoint, processing all events scheduled for that time.
+- `next_decision_step()`: Advance the simulation until the next decision point where one or more agents need to make decisions. Returns a list of agent names that need to act.
+- `run_simulation(raise_on_error: bool = False)`: Run the simulation until completion or until an error occurs. If `raise_on_error` is True, exceptions will be raised; otherwise, they will be logged.
+- `get_observation()`: Get the current observation dict of the environment, including the state of agents and workstations.
+- `get_decision_agents()`: Get a list of agents that need to make decisions at the current time step.
+- `is_done()`: Check if all tasks are completed.
+
 
 ## 🎮 GUI for Human Tests
 

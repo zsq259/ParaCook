@@ -4,8 +4,8 @@ from src.agent.method.CoT.instruction import INSTRUCTION, REFINE_INSTRUCTION
 from src.game.const import *
 
 class CoTAgent(IOAgent):
-    def __init__(self, model: Model):
-        super().__init__(model)
+    def __init__(self, model: Model, log_dir: str):
+        super().__init__(model, log_dir)
         self.INSTRUCTION = INSTRUCTION
         self.REFINE_INSTRUCTION = REFINE_INSTRUCTION
 

@@ -105,14 +105,6 @@ class GeminiWrapper(Model):
                     raise e
         if not response:
             raise ValueError("No response received from Gemini API")
-        
-        if messages is None:
-            messages = [
-                {"role": "system", "content": system_prompt or "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ]
-        
-        self.log_conversation(messages, response, log_file=f"logs/{self.name}_conversation.txt")
         return response
 
 

@@ -1,4 +1,4 @@
-import logging, os
+import logging, os, re
 
 RESET = "\x1b[0m"
 COLOR_CODES = {
@@ -26,21 +26,35 @@ COLOR_CODES = {
 class ColoredFormatter(logging.Formatter):
     def format(self, record):
         return super().format(record)
+    
+class AnsiStrippingFormatter(logging.Formatter):
+    ANSI_RE = re.compile(r'\x1b\[[0-9;]*m')
+    def format(self, record):
+        text = super().format(record)
+        return self.ANSI_RE.sub('', text)
+
+class ExcludeModelLogFilter(logging.Filter):
+    def filter(self, record):
+        return not getattr(record, "model_log", False)
 
 handler = logging.StreamHandler()
 formatter = ColoredFormatter('%(message)s')
 handler.setFormatter(formatter)
 
-# Add file logging functionality
-if not os.path.exists('tmp'):
-    os.makedirs('tmp')
-if os.path.exists('tmp/log.txt'):
-    with open('tmp/log.txt', 'w', encoding='utf-8') as f:
-        f.write("")  # clear the file if it exists
-file_handler = logging.FileHandler('tmp/log.txt', encoding='utf-8')
-file_handler.setFormatter(formatter)
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(handler)
-logger.addHandler(file_handler)
+
+def set_log_dir(log_dir: str, file_name: str = "env.log", keep_colors: bool = False):
+    """Set the log directory and file name for the logger."""
+    os.makedirs(log_dir, exist_ok=True)
+    file_handler = logging.FileHandler(os.path.join(log_dir, file_name))
+    # file_formatter = logging.Formatter('%(message)s')
+    file_formatter = ColoredFormatter('%(message)s') if keep_colors else AnsiStrippingFormatter('%(message)s')
+    file_handler.setFormatter(file_formatter)
+    file_handler.addFilter(ExcludeModelLogFilter())
+    logger.addHandler(file_handler)
+
+def log_model_conversation(massage: str):
+    """Log the model conversation to the logger."""
+    logger.info(massage, extra={"model_log": True})

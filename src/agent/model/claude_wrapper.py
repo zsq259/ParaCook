@@ -100,8 +100,6 @@ class ClaudeWrapper(Model):
                     raise e
         if not response:
             raise ValueError("No response received from Claude API")
-
-        self.log_conversation(messages, response, log_file=f"logs/{self.name}_conversation.txt")
         return response
 
 def main():

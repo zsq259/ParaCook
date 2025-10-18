@@ -3,6 +3,8 @@
 # Capture Ctrl+C and kill all child processes
 trap "echo 'kill all child processes'; kill 0; exit" SIGINT
 
+BATCH_TIME=$(date +"%H-%M")
+
 MODELS=(
     "gpt-5"
     "gemini-2.5-pro"
@@ -38,7 +40,8 @@ for MODEL in "${MODELS[@]}"; do
                                            --agent $METHOD \
                                            --map $map \
                                            --orders $orders \
-                                           --result-path $result_path &
+                                           --result-path $result_path \
+                                           --batch-log-id $BATCH_TIME &
                         ((job_count++))
                         if [[ $job_count -ge $MAX_JOBS ]]; then
                             wait -n  # Wait for any job to finish

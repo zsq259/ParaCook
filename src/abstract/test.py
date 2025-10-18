@@ -4,7 +4,7 @@ from collections import deque
 
 from src.data.cpsat import solve_task_scheduling
 from src.abstract.instruction import INSTRUCTION
-from src.utils.utils import get_model, extract_json
+from src.utils.utils import get_model_wrapper, extract_json
 from src.agent.model.model import PredictConfig
 
 
@@ -103,7 +103,8 @@ def test_subtasks(agent_num, subtasks, model, result_path, result_name):
         assert(total_time == min_time)
         
     else:
-        model = get_model(model)
+        model_wrapper = get_model_wrapper(model)
+        model = model_wrapper(model)
         prompt = INSTRUCTION.format(agent_num=agent_num, subtasks=json.dumps(subtasks, indent=4))
         response = model.predict(PredictConfig(prompt=prompt, temperature=0))
         print("Model response:", response)
@@ -131,8 +132,8 @@ if __name__ == "__main__":
     data_dir = "data/abstract"
     resule_dir = "results/abstract"
     recipes = ["sashimi", "salad", "sushi", "burger", "pasta", "burrito"]
-    models = ["cp_sat", "gpt-5", "gemini-2.5-pro", "claude-opus-4-1-20250805", "qwen3-max-preview"]
-    # models = ["deepseek-reasoner"]
+    # models = ["cp_sat", "gpt-5", "gemini-2.5-pro", "claude-opus-4-1-20250805", "qwen3-max-preview"]
+    models = ["deepseek-reasoner"]
     agent_nums = [2, 3]
     orders_nums = [3, 4]
     seeds = [42]

@@ -4,16 +4,17 @@ import json
 import sys
 import os
 import argparse
+import datetime
 from src.game.world_state import World
 from src.game.simulator import Simulator
-from src.utils.utils import get_model
+from src.utils.utils import get_model_wrapper
 from src.agent.method.IO.IO import IOAgent
 from src.agent.method.CoT.CoT import CoTAgent
 from src.agent.method.ReAct.ReAct import ReActAgent
 from src.agent.method.MultiStepReAct.MultiStepReAct import MultiStepReActAgent
 from src.agent.method.Fixed.Fixed import FixedAgent
 from src.agent.method.Human.Human import HumanAgent
-from src.utils.logger_config import logger, COLOR_CODES, RESET
+from src.utils.logger_config import logger, set_log_dir, COLOR_CODES, RESET
 
 name_to_agent = {
     "IO": IOAgent,
@@ -29,6 +30,13 @@ def load_data(filename):
         return json.load(f)
 
 def run_test(args):
+    log_dir = "logs"
+    now = datetime.datetime.now()
+    date_str = now.strftime("%y-%m-%d")
+    run_time_str = now.strftime("%H-%M-%S")
+    run_log_dir = os.path.join(log_dir, date_str, args.batch_log_id, run_time_str)
+    set_log_dir(run_log_dir)
+
     result_path = f"results/{args.agent}/{args.model}/{args.result_path}.json"
     if not args.result_path:
         result_path = None
@@ -63,8 +71,9 @@ def run_test(args):
     simulator = Simulator(world)
 
     # --- 3. Initialize Agent and run test ---
-    model = get_model(args.model)
-    agent = name_to_agent[args.agent](model)
+    model_wrapper = get_model_wrapper(args.model)
+    model = model_wrapper(args.model)
+    agent = name_to_agent[args.agent](model, log_dir=run_log_dir)
     result = agent.run_test(simulator, recipes, args.examples if args.examples else [])
     
     logger.info(f"{COLOR_CODES['GREEN']}Results saved to: {result_path}{RESET}")
@@ -108,10 +117,13 @@ def parse_arguments():
     parser.add_argument('--result-path', '-r', default='tmp',
                        help='Result file path must be specified')
     
+    parser.add_argument('--batch-log-id', type=str, default='',
+                       help='Batch log identifier for logging purposes')
+    
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_arguments()
     logger.info(f"Running test: model={args.model}, method={args.agent}, map={args.map}, orders={args.orders}, result_path={args.result_path}")
-    
+
     run_test(args)

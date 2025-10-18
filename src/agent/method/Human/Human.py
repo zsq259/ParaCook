@@ -28,7 +28,7 @@ WEB_URL = f"http://{config['web']['host']}:{config['web']['port']}"
 WS_URL = f"ws://{config['api']['host']}:{config['api']['port']}/ws/agent"
 
 class HumanAgent(Agent):
-    def __init__(self, model: Model, api_url: str = API_URL):
+    def __init__(self, model: Model, log_dir: str | None = None, api_url: str = API_URL):
         super().__init__(model)
         self.api_url = api_url
         self.ws_url = WS_URL

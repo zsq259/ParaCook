@@ -34,17 +34,12 @@ class Simulator:
             time0.agents.append(agent_name)
         self.event_queue.append(time0)
         self.state_history: List[dict] = []  # To record the state at each time point
+        self.finished_agents = set()
 
-    def reset_plan(self, plan: Dict[str, List[Dict]]):
-        """Reset the plan of all agents"""
-        for agent_name, action_list in plan.items():
-            if agent_name in self.world.agents:
-                agent = self.world.agents[agent_name]
-                if not isinstance(action_list, list):
-                    raise ValueError(f"Action plan for Agent {agent_name} is not a list")
-                agent.reset_actions(action_list)
-            else:
-                raise ValueError(f"Agent {agent_name} does not exist in the world")
+    def rollback_plan(self):
+        """Rollback the plan of all agents to last loaded state"""
+        for agent_name, agent in self.world.agents.items():
+            agent.rollback_actions()
 
     def load_plan(self, plan: Dict[str, List[Dict]]):
         """Load action plans for all agents"""
@@ -118,22 +113,25 @@ class Simulator:
         duration = self.get_action_duration_for_agent(agent_name, next_action)
         if duration < 0:
             raise ActionExecutionError(f"Agent {agent_name} cannot execute action {next_action}")
-        agent.start_next_action(self.current_time, duration)
-        logger.info(f"Time {self.current_time}: Agent {agent_name} starts executing action {next_action}, expected completion time {agent.finish_time}")
-        if next_action["action"] == "Interact":
+        
+        reserved_station = None
+        started = False
+        
+        if next_action["action"] in ["Interact", "Process"]:
             target_name = next_action["target"]
             station: Station = self._get_station_for_action(agent_name, target_name)
-            # If agent is not adjacent to the workstation, raise error
             if not self.world.is_adjacent((agent.x, agent.y), (station.x, station.y)):
-                raise ActionExecutionError(f"Agent {agent_name} tried to interact with workstation {target_name} that is not nearby")
+                raise ActionExecutionError(f"Agent {agent_name} tried to {next_action['action']} with workstation {target_name} that is not nearby")
+            reserved_station = station
             station.use(agent_name)
-        elif next_action["action"] == "Process":
-            target_name = next_action["target"]
-            station: Station = self._get_station_for_action(agent_name, target_name)
-            # If agent is not adjacent to the workstation, raise error
-            if not self.world.is_adjacent((agent.x, agent.y), (station.x, station.y)):
-                raise ActionExecutionError(f"Agent {agent_name} tried to process on workstation {target_name} that is not nearby")
-            station.use(agent_name)
+
+        try:
+            agent.start_next_action(self.current_time, duration)
+            started = True
+            logger.info(f"Time {self.current_time}: Agent {agent_name} starts executing action {next_action}, expected completion time {agent.finish_time}")
+        finally:
+            if not started and reserved_station:
+                reserved_station.release()
 
     def complete_current_action(self, agent_name: str):
         """Complete the current action for the specified agent"""
@@ -141,26 +139,29 @@ class Simulator:
         
         if agent.is_idle or agent.current_action is None:
             return  # No action being executed
-        agent.is_idle = True
+
         action = agent.current_action
-        agent.current_action = None
         logger.info(f"{COLOR_CODES['PURPLE']}Action to complete: {action}{RESET}")
+
+        station: Station | None = None
+        
         # Execute action effects
         try:
             if action["action"] == "MoveTo":
                 target_pos = tuple(action["target"])
                 time, path = self.world.find_path((agent.x, agent.y), target_pos)
                 agent.x, agent.y = path[-1]
+
             elif action["action"] == "Interact":
                 target_name = action["target"]
-                station: Station = self._get_station_for_action(agent_name, target_name)
+                station = self._get_station_for_action(agent_name, target_name)
                 if not self.world.is_adjacent((agent.x, agent.y), (station.x, station.y)):
                     raise ActionExecutionError(f"Agent {agent_name} tried to interact with workstation {target_name} that is not nearby")
                 station.interact(agent_name, self.world, self.current_time)
                 station.release()
             elif action["action"] == "Process":
                 target_name = action["target"]
-                station: Station = self._get_station_for_action(agent_name, target_name)
+                station = self._get_station_for_action(agent_name, target_name)
                 if not self.world.is_adjacent((agent.x, agent.y), (station.x, station.y)):
                     raise ActionExecutionError(f"Agent {agent_name} tried to process on workstation {target_name} that is not nearby")
                 station.process(agent_name)
@@ -169,12 +170,17 @@ class Simulator:
                 pass
             elif action["action"] == "Finish":
                 agent.all_finished = True
-        except ActionExecutionError as e:
-            raise ActionExecutionError(f"Agent {agent_name} encountered an error while executing action {action}: {e}")
+                self.finished_agents.add(agent_name)
 
-        # Already removed current action from queue
-        # agent.action_queue.pop(0)  # This step is done in start_next_action
-        logger.info(f"Time {self.current_time}: Agent {agent_name} completed action {action}")
+            agent.is_idle = True
+            agent.current_action = None
+            # Already removed current action from queue
+            # agent.action_queue.pop(0)  # This step is done in start_next_action
+            logger.info(f"Time {self.current_time}: Agent {agent_name} completed action {action}")
+        finally:
+            if station:
+                station.release()
+        
 
     def update_stations(self, current_time: int):
         """Check the status of all workstations"""
@@ -185,7 +191,7 @@ class Simulator:
             elif isinstance(obj, PlateReturn):
                 obj.update(current_time)
 
-    def run_simulation(self):
+    def run_simulation(self, raise_on_error: bool = False):
         """Run the complete simulation"""
         logger.info("=== Starting Simulation ===")
         logger.info(f"Initial state:")
@@ -195,8 +201,15 @@ class Simulator:
         while self.event_queue:
             try:
                 self.step()
-            except Exception as e:
+            except ActionExecutionError as e:
                 logger.error(f"{COLOR_CODES['RED']}Simulation error: {e}{RESET}")
+                if raise_on_error:
+                    raise e
+                return
+            except Exception as e:
+                logger.error(f"{COLOR_CODES['RED']}Simulation unexpected error: {e}{RESET}")
+                if raise_on_error:
+                    raise e
                 return
 
         logger.info(f"\n=== Simulation Ended, Total Time {self.current_time} ===")
@@ -218,6 +231,20 @@ class Simulator:
                     new_tp.agents.append(agent_name)
                     heappush(self.event_queue, new_tp)
 
+    def resolve_instant_actions(self):
+        """Resolve all instant actions (actions with zero duration)"""
+        for agent_name, agent in self.world.agents.items():
+            self.assign_next_action(agent_name)
+            while agent.finish_time == self.current_time and not agent.is_idle:
+                self.complete_current_action(agent_name)
+                self.assign_next_action(agent_name)
+        self.update_event_queue()
+
+    def submit_plan(self, actions: Dict[str, List]):
+        """Submit action plans for all agents"""
+        self.load_plan(actions)
+        self.resolve_instant_actions()
+
     def step(self):
         """Advance to the next time point, process one time point in the event queue"""
         if not self.event_queue:
@@ -230,23 +257,15 @@ class Simulator:
         have_agent_finished = False
         for agent_name in current_time_point.agents:
             agent = self.world.agents[agent_name]
-            try:
-                if current_time_point.time:
-                    # have_agent_finished = True
-                    self.complete_current_action(agent_name)
+            if current_time_point.time:
+                # have_agent_finished = True
+                self.complete_current_action(agent_name)
+            self.assign_next_action(agent_name)
+            while agent.finish_time == self.current_time and not agent.is_idle:
+                self.complete_current_action(agent_name)
                 self.assign_next_action(agent_name)
-                while agent.finish_time == self.current_time and not agent.is_idle:
-                    self.complete_current_action(agent_name)
-                    self.assign_next_action(agent_name)
-                if not agent.all_finished and len(agent.action_queue) == 0 and agent.is_idle:
-                    have_agent_finished = True
-            except ActionExecutionError as e:
-                # Return error information
-                if agent.current_action:
-                    raise ActionExecutionError(f"Agent {agent_name} occurred an error: {e} at time {self.current_time} when executing action {agent.current_action}")
-                elif len(agent.action_queue) > 0:
-                    raise ActionExecutionError(f"Agent {agent_name} occurred an error: {e} at time {self.current_time} when preparing to execute action {agent.action_queue[0]}")
-
+            if not agent.all_finished and len(agent.action_queue) == 0 and agent.is_idle:
+                have_agent_finished = True
             if not agent.current_action:
                 continue
 
@@ -263,6 +282,48 @@ class Simulator:
 
         return have_agent_finished
     
+    def next_decision_step(self):
+        """Advance simulation to the next decision point where at least one agent needs to make a decision"""
+        need_decision_agents = self.get_decision_agents()
+        while not need_decision_agents and self.event_queue:
+            self.step()
+            need_decision_agents = self.get_decision_agents()
+        return need_decision_agents
+        
+
+    def get_observation(self) -> Dict:
+        """Get the current observation of the world state"""
+        world_json = deepcopy(self.world.to_json())
+        agent_runtimes = {}
+        for agent_name, agent in self.world.agents.items():
+            agent_runtimes[agent_name] = {
+                "position": (agent.x, agent.y),
+                "is_idle": agent.is_idle,
+                "current_action": agent.current_action,
+                "finish_time": agent.finish_time,
+                "remaining_actions": len(agent.action_queue),
+            }
+        return {
+            "current_time": self.current_time,
+            "world": world_json,
+            "agent_runtimes": agent_runtimes,
+            "pending_orders": self.world.orders,
+            "agent_status_text": self.status(),
+        }
+    
+    
+    def get_finished_agents(self) -> List[str]:
+        """Return a list of agents that have completed all their actions"""
+        return list(self.finished_agents)
+
+    def get_decision_agents(self) -> List[str]:
+        """Return a list of agents that need to make decisions (do not have actions assigned but not finished)"""
+        decision_agents = []
+        for agent_name, agent in self.world.agents.items():
+            if agent.is_idle and not agent.all_finished and len(agent.action_queue) == 0:
+                decision_agents.append(agent_name)
+        return decision_agents
+
     def status(self):
         """Return the status of all agents"""
         status = ""
@@ -273,12 +334,16 @@ class Simulator:
             else:
                 if agent.current_action:
                     status += f"Agent {agent_name}: executing {agent.current_action}, finish at: {agent.finish_time}, remaining actions: {len(agent.action_queue)}\n"
-                    # for act in agent.action_queue:
-                    #     status += f"{act}, "
-                    # status = status.rstrip(", ") + "\n"
+                    for act in agent.action_queue:
+                        status += f"{act}, "
+                    status = status.rstrip(", ") + "\n"
                 else:
                     # raise ValueError(f"Agent {agent_name} is not idle but has no current action")
                     logger.warning(f"{COLOR_CODES['YELLOW']}Agent {agent_name} is not idle but has no current action{RESET}")
                     exit(1)
 
         return status
+    
+    def is_done(self) -> bool:
+        """Check if all orders are completed"""
+        return len(self.world.orders) == 0

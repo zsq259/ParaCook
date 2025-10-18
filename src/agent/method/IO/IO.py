@@ -4,14 +4,14 @@ from src.agent.method.IO.instruction import INSTRUCTION, REFINE_INSTRUCTION
 from src.game.const import *
 from src.game.world_state import World
 from src.game.simulator import Simulator
-from src.utils.logger_config import logger, COLOR_CODES, RESET
+from src.utils.logger_config import logger, log_model_conversation, COLOR_CODES, RESET
 
 import json
 from copy import deepcopy
 
 class IOAgent(Agent):
-    def __init__(self, model: Model):
-        super().__init__(model)
+    def __init__(self, model: Model, log_dir: str):
+        super().__init__(model, log_dir)
         self.INSTRUCTION = INSTRUCTION
         self.REFINE_INSTRUCTION = REFINE_INSTRUCTION
 
@@ -39,7 +39,7 @@ class IOAgent(Agent):
         world = simulator.world
         prompt = f"Map JSON:\n{json.dumps(world.map_data)}\n\nRecipes:\n{recipes}\n\nOrders:\n{str(world.orders)}"
         plan = self.get_actions(prompt)
-        logger.info(f"{COLOR_CODES['BLUE']}final plan: {plan}{RESET}")
+        log_model_conversation(f"{COLOR_CODES['BLUE']}final plan: {plan}{RESET}")
 
         count = 0
         simulator_copy = deepcopy(simulator)
@@ -57,6 +57,6 @@ class IOAgent(Agent):
                     return self.create_result(simulator, count, plan, str(e))
                 prompt = self.REFINE_INSTRUCTION.format(error=str(e), world_json=simulator.world.to_json())
                 plan = self.get_actions(prompt)
-                logger.info(f"{COLOR_CODES['BLUE']}plan after refinement: {plan}{RESET}")
+                log_model_conversation(f"{COLOR_CODES['BLUE']}plan after refinement: {plan}{RESET}")
 
         return self.create_result(simulator, count, plan)

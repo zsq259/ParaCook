@@ -4,19 +4,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 from io import BytesIO
 
-def get_model(model_name):
+def get_model_wrapper(model_name):
     if "gemini" in model_name.lower():
         from src.agent.model.gemini_wrapper import GeminiWrapper
-        return GeminiWrapper(name=model_name)
+        return GeminiWrapper
     # elif "deepseek" in model_name.lower():
     #     from src.agent.model.deepseek_wrapper import DeepSeekWrapper
-    #     return DeepSeekWrapper(name=model_name)
+    #     return DeepSeekWrapper
     # elif "claude" in model_name.lower():
     #     from src.agent.model.claude_wrapper import ClaudeWrapper
-    #     return ClaudeWrapper(name=model_name)
+    #     return ClaudeWrapper
     else:
         from src.agent.model.gpt_wrapper import GPTWrapper
-        return GPTWrapper(name=model_name)
+        return GPTWrapper
 
 def clean_text(text: str) -> str:
     # Remove characters that cause errors when extracting JSON

@@ -530,17 +530,17 @@ class Agent(GameObject):
         self.waiting_time = 0  # Total waiting time when idle
         self.moving_time = 0  # Total time spent moving
         self.processing_time = 0  # Total time spent processing actions
-    
-    def reset_actions(self, actions: List[Dict]):
-        self.all_actions.pop()
-        self.all_action_list.append(actions)
+
+    def rollback_actions(self):
+        if not self.all_action_list:
+            return
+        self.all_action_list.pop()
         self.all_actions = [action for sublist in self.all_action_list for action in sublist]
-        self.action_queue = actions.copy()
 
     def load_actions(self, actions: List[Dict]):
         self.all_action_list.append(actions)
         self.all_actions = [action for sublist in self.all_action_list for action in sublist]
-        self.action_queue = actions.copy()
+        self.action_queue.extend(actions)
     
     def has_actions(self) -> bool:
         return len(self.action_queue) > 0 or not self.is_idle
