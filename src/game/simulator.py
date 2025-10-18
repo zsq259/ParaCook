@@ -54,6 +54,12 @@ class Simulator:
         
         logger.info(f"{COLOR_CODES['CYAN']}Loaded action plans for {len(plan)} agents{RESET}")
 
+    def get_agent_plan(self) -> Dict[str, List[Dict]]:
+        """Get all agents' action plans"""
+        return {
+            name: agent.all_actions for (name, agent) in self.world.agents.items()
+        }
+
     def _get_station_for_action(self, agent_name, target_name) -> Station:
         """Get the specified workstation for an agent"""
         target_obj = self.world.get_object_by_name(target_name)

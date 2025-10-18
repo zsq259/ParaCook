@@ -37,6 +37,11 @@ def run_test(args):
     run_log_dir = os.path.join(log_dir, date_str, args.batch_log_id, run_time_str)
     set_log_dir(run_log_dir)
 
+    run_args_path = os.path.join(run_log_dir, "run_args.json")
+    os.makedirs(os.path.dirname(run_args_path), exist_ok=True)
+    with open(run_args_path, 'w', encoding='utf-8') as f:
+        json.dump(vars(args), f, indent=4)
+
     result_path = f"results/{args.agent}/{args.model}/{args.result_path}.json"
     if not args.result_path:
         result_path = None

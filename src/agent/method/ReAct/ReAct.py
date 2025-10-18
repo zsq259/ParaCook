@@ -31,39 +31,35 @@ class ReActAgent(Agent):
     def run_test(self, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
         self.initiate_chat(examples)
 
-        world = simulator.world
         prompt = None
+        plan = None
         count_max = 0
-        while len(simulator.get_finished_agents()) < len(simulator.world.agents) and not simulator.is_done():
-            count = 0
-            simulator_copy = deepcopy(simulator)
-            while count < retries:
-                try:
+        count = 0
+        simulator_copy = deepcopy(simulator)
+        while count < retries:
+            try:
+                while len(simulator.get_finished_agents()) < len(simulator.world.agents) and not simulator.is_done():
+                    if plan:
+                        simulator.submit_plan(plan)
+                        simulator.next_decision_step()
+                        if simulator.is_done() or len(simulator.get_finished_agents()) == len(simulator.world.agents):
+                            break
                     if not prompt:
-                        prompt = f"Map JSON:\n{json.dumps(world.map_data)}\n\nRecipes:\n{recipes}\n\nOrders:\n{str(world.orders)}"
+                        prompt = f"Map JSON:\n{json.dumps(simulator.world.map_data)}\n\nRecipes:\n{recipes}\n\nOrders:\n{str(simulator.world.orders)}"
                     else:
                         prompt = f"Observation:\n{simulator.status()}\nCurrent World State:\n{simulator.world.to_json()}\n"
                     plan = self.get_actions(prompt)
                     log_model_conversation(f"{COLOR_CODES['BLUE']}next actions: {json.dumps(plan, indent=2)}{RESET}")
-                    simulator.submit_plan(plan)
-                    simulator.next_decision_step()
-                    break
-                except Exception as e:
-                    logger.error(f"{COLOR_CODES['RED']}Simulation error on attempt {count+1}: {e}{RESET}")
-                    count += 1
-                    count_max = max(count_max, count)
-                    if count == retries:
-                        return self.create_result(simulator, count_max, error_msg=str(e))
-                    prompt = self.REFINE_INSTRUCTION.format(error=str(e), world_json=simulator.world.to_json())
-                    plan = self.get_actions(prompt)
-                    log_model_conversation(f"{COLOR_CODES['BLUE']}plan after refinement: {json.dumps(plan, indent=2)}{RESET}")
-                    simulator = deepcopy(simulator_copy)
-                    world = simulator.world
-                    simulator.rollback_plan()
-                    simulator.submit_plan(plan)
-                    simulator.next_decision_step()
-            
-            if len(world.orders) == 0:
                 break
+            except Exception as e:
+                logger.error(f"{COLOR_CODES['RED']}Simulation error on attempt {count+1}: {e}{RESET}")
+                count += 1
+                count_max = max(count_max, count)
+                if count == retries:
+                    return self.create_result(simulator, count_max, error_msg=str(e))
+                prompt = self.REFINE_INSTRUCTION.format(error=str(e), last_plan=simulator.get_agent_plan(), world_json=simulator.world.to_json())
+                plan = self.get_actions(prompt)
+                log_model_conversation(f"{COLOR_CODES['BLUE']}plan after refinement: {json.dumps(plan, indent=2)}{RESET}")
+                simulator = deepcopy(simulator_copy)
 
         return self.create_result(simulator, count_max)

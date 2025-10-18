@@ -21,9 +21,4 @@ class MultiStepReActAgent(ReActAgent):
                 RETURN_DIRTY_PLATE_TIME=RETURN_DIRTY_PLATE_TIME,
             )},
         ]
-        for ex in examples:
-            ex_mod = __import__(f"src.agent.method.MultiStepReAct.example.{ex}", fromlist=['input', 'output'])
-            messages.append({"role": "user", "content": ex_mod.input})
-            messages.append({"role": "assistant", "content": ex_mod.output})
-
         self.chat_history = messages.copy()

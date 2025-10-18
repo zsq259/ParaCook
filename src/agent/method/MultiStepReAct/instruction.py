@@ -296,12 +296,14 @@ Model Output:
 
 REFINE_INSTRUCTION = """
 Your previous action plan occurred an error during simulation: {error}. 
+Here are the actions executed in the last plan:
+{last_plan}
 Here is the world state when the error occurred:
 {world_json}
+Discard all the previous plan and re-plan from the initial world state.
 Please think step by step and first analyze the error, then refine your previous action plan to avoid this error while still following all the rules and constraints.
 You can adjust the number of actions you output for each agent in this turn according to the current situation and planning needs. Do not output too many actions at once if you are meeting errors.
-The current plan should be a correction to the plan you provided last time, based on the previous observation, rather than the world state at the time of the error.
-Remember to strictly check all actions in your previous plan to ensure they are all valid and prevent similar errors from happening again.
+Remember to strictly check all actions in your plan to ensure they are all valid and prevent similar errors from happening again.
 Output format:
 
 ```json
