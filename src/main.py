@@ -10,6 +10,7 @@ from src.game.simulator import Simulator
 from src.utils.utils import get_model_wrapper
 from src.agent.method.IO.IO import IOAgent
 from src.agent.method.CoT.CoT import CoTAgent
+from src.agent.method.PLaG.PLaG import PLaGAgent
 from src.agent.method.ReAct.ReAct import ReActAgent
 from src.agent.method.MultiStepReAct.MultiStepReAct import MultiStepReActAgent
 from src.agent.method.Fixed.Fixed import FixedAgent
@@ -19,6 +20,7 @@ from src.utils.logger_config import logger, set_log_dir, COLOR_CODES, RESET
 name_to_agent = {
     "IO": IOAgent,
     "CoT": CoTAgent,
+    "PLaG": PLaGAgent,
     "ReAct": ReActAgent,
     "MultiStepReAct": MultiStepReActAgent,
     "Fixed": FixedAgent,

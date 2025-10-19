@@ -59,11 +59,8 @@ class GPTWrapper(Model):
         raise NotImplementedError("Not implemented.")
     
     def predict(self, config: PredictConfig) -> str:
-        prompt = config.prompt
-        stop = config.stop
         retries = config.retries
         delay = config.delay
-        messages = config.messages
         attempt = 0
 
         if self.name == "gpt-5":

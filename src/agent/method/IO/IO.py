@@ -46,8 +46,8 @@ class IOAgent(Agent):
         while count < retries:
             simulator = deepcopy(simulator_copy)
             world = simulator.world
-            simulator.load_plan(plan)
             try:
+                simulator.submit_plan(plan)
                 simulator.run_simulation()
                 break
             except Exception as e:
