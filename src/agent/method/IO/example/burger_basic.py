@@ -17,19 +17,14 @@ Map JSON:
         {"x": 5, "y": 0, "type": "station", "name": "chopping_board1"},
         {"x": 6, "y": 0, "type": "station", "name": "chopping_board2"},
         {"x": 7, "y": 0, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 1, "type": "obstacle", "name": "wall"},
         {"x": 7, "y": 1, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 2, "type": "obstacle", "name": "wall"},
         {"x": 7, "y": 2, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 3, "type": "obstacle", "name": "wall"},
         {"x": 7, "y": 3, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 4, "type": "obstacle", "name": "wall"},
         {"x": 7, "y": 4, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 5, "type": "obstacle", "name": "wall"},
         {"x": 1, "y": 5, "type": "station", "name": "sink"},
         {"x": 2, "y": 5, "type": "station", "name": "plate_return"},
@@ -55,7 +50,7 @@ output = """
         {"action": "MoveTo", "target": [1, 1]},
         {"action": "Interact", "target": "dispenser1"},
         {"action": "MoveTo", "target": [3, 4]},
-        {"action": "Interact", "target": "table1"},
+        {"action": "Interact", "target": "table1"}
     ],
     "agent2": [
         {"action": "MoveTo", "target": [2, 1]},
@@ -72,7 +67,7 @@ output = """
         {"action": "Wait", "duration": 20},
         {"action": "Interact", "target": "stove"},
         {"action": "MoveTo", "target": [4, 4]},
-        {"action": "Interact", "target": "serving_window"},
+        {"action": "Interact", "target": "serving_window"}
     ]
 }
 ```

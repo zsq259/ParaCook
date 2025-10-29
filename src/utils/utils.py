@@ -4,10 +4,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 from io import BytesIO
 
+def load_data(filename):
+    with open(filename, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
 def get_model_wrapper(model_name):
+    # from src.agent.model.gpt_wrapper import GPTWrapper
+    # return GPTWrapper
     if "gemini" in model_name.lower():
         from src.agent.model.gemini_wrapper import GeminiWrapper
         return GeminiWrapper
+    elif "llama" in model_name.lower():
+        from src.agent.model.llama_wrapper import LlamaWrapper
+        return LlamaWrapper
     # elif "deepseek" in model_name.lower():
     #     from src.agent.model.deepseek_wrapper import DeepSeekWrapper
     #     return DeepSeekWrapper

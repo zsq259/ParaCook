@@ -48,7 +48,7 @@ class IOAgent(Agent):
             world = simulator.world
             try:
                 simulator.submit_plan(plan)
-                simulator.run_simulation()
+                simulator.run_simulation(raise_on_error=True)
                 break
             except Exception as e:
                 logger.error(f"{COLOR_CODES['RED']}Simulation error on attempt {count+1}: {e}{RESET}")
