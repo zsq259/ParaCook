@@ -15,8 +15,8 @@ def get_model_wrapper(model_name):
         from src.agent.model.gemini_wrapper import GeminiWrapper
         return GeminiWrapper
     elif "llama" in model_name.lower():
-        from src.agent.model.llama_wrapper import LlamaWrapper
-        return LlamaWrapper
+        from src.agent.model.llama_wrapper import LLaMaWrapper
+        return LLaMaWrapper
     # elif "deepseek" in model_name.lower():
     #     from src.agent.model.deepseek_wrapper import DeepSeekWrapper
     #     return DeepSeekWrapper
@@ -44,16 +44,16 @@ def extract_json(text: str) -> dict|list:
     matches = re.findall(json_regex, text)
     if matches and len(matches) > 0:
         json_data = matches[0].replace('```json', '').replace('```', '').strip()
-        # .replace('\'', '\"')
         json_data = clean_text(json_data)
+        json_data.replace("'", '"')
         try:
             parsed_json = json.loads(json_data)
             return parsed_json
         except json.JSONDecodeError as e:
             raise ValueError(f"Error parsing JSON data: {e}") from e
     else:
-        # text = text.replace("'", '"')
         text = clean_text(text)
+        text = text.replace("'", '"')
         try:
             parsed_json = json.loads(text)
         except json.JSONDecodeError as e:
