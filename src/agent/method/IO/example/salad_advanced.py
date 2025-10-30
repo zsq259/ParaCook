@@ -37,10 +37,10 @@ Map JSON:
 }
 
 Recipes:
-- salad_advanced: Put chopped lettuce and chopped tomato together to a plate to make a salad.
+['salad_advanced: Put chopped lettuce and chopped tomato together to a plate to make a salad.']
 
 Orders:
-[salad_advanced]
+['salad_advanced']
 """
 
 output = """

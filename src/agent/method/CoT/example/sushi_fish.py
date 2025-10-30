@@ -37,10 +37,10 @@ Map JSON:
 }
 
 Recipes:
-- sushi_fish: First chop the fish and cook the rice. Then put the chopped fish and cooked rice and a piece of nori on a plate to make a fish sushi.
+['sushi_fish: First chop the fish and cook the rice. Then put the chopped fish and cooked rice and a piece of nori on a plate to make a fish sushi.']
 
 Orders:
-[sushi_fish]
+['sushi_fish']
 """
 
 output = """

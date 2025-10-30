@@ -37,10 +37,10 @@ Map JSON:
 }
 
 Recipes:
-- burger_basic: First chop the meat and cook it. Then put the cooked meat with a piece of bread on a plate to make a basic burger.
+['burger_basic: First chop the meat and cook it. Then put the cooked meat with a piece of bread on a plate to make a basic burger.']
 
 Orders:
-[burger_basic]
+['burger_basic']
 """
 
 output = """
