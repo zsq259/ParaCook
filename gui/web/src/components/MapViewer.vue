@@ -105,7 +105,7 @@
               <template v-if="Array.isArray(hoveredCell.data) && hoveredCell.data.length > 0">
                 <div v-for="(agent, idx) in hoveredCell.data" :key="idx" class="agent-info">
                   <el-divider v-if="idx > 0" style="margin: 8px 0" />
-                  <div><strong>Agent {{ idx + 1 }}:</strong> {{ agent.name }}</div>
+                  <div><strong>Agent:</strong> {{ agent.name }}</div>
                   <div v-if="agent.holding !== undefined">
                     <strong>Holding:</strong> {{ agent.holding || 'Nothing' }}
                   </div>
