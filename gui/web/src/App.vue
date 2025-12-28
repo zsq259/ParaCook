@@ -12,6 +12,10 @@
           <el-tag v-if="taskCompleted" type="success" size="large" effect="dark">
             ✅ All Orders Completed!
           </el-tag>
+          <el-button type="info" @click="showHelp = true">
+            <el-icon><QuestionFilled /></el-icon>
+            <span style="margin-left: 5px;">Help</span>
+          </el-button>
           <el-button type="danger" @click="handleClearAll">
             Clear All States and Refresh
           </el-button>
@@ -85,6 +89,7 @@
         </el-col>
       </el-row>
     </el-main>
+    <HelpDialog v-model:visible="showHelp" />
   </el-container>
 </template>
 
@@ -99,6 +104,8 @@ import ActionForm from './components/ActionForm.vue'
 import LogViewer from './components/LogViewer.vue'
 import HistoryPlayer from './components/HistoryPlayer.vue'
 import { useWebSocket } from './composables/useWebSocket'
+import { QuestionFilled } from '@element-plus/icons-vue'
+import HelpDialog from './components/HelpDialog.vue'
 import { 
   executeActions, 
   clearActions, 
@@ -122,6 +129,9 @@ const executing = ref(false)
 const taskCompleted = ref(false)
 const subscriptionsSetup = ref(false)
 const executionHistory = ref([])
+
+const showHelp = ref(false)
+
 
 // ========== 通用错误处理 ==========
 const handleApiError = (error, defaultMessage) => {
@@ -233,6 +243,17 @@ onMounted(() => {
   // 如果已经连接，立即设置订阅
   if (isConnected.value) {
     setupSubscriptions()
+  }
+  const handleKeyPress = (e) => {
+    // F1 或 ? 打开帮助
+    if (e.key === 'F1' || (e.shiftKey && e.key === '?')) {
+      e.preventDefault()
+      showHelp.value = true
+    }
+  }
+  window.addEventListener('keydown', handleKeyPress)
+  return () => {
+    window.removeEventListener('keydown', handleKeyPress)
   }
 })
 
