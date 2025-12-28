@@ -55,6 +55,6 @@ def set_log_dir(log_dir: str, file_name: str = "env.log", keep_colors: bool = Fa
     file_handler.addFilter(ExcludeModelLogFilter())
     logger.addHandler(file_handler)
 
-def log_model_conversation(massage: str):
+def log_model_conversation(message: str):
     """Log the model conversation to the logger."""
-    logger.info(massage, extra={"model_log": True})
+    logger.info(message, extra={"model_log": True})
