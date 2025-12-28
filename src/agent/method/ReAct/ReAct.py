@@ -50,6 +50,10 @@ class ReActAgent(Agent):
                         prompt = f"Observation:\n{simulator.status()}\nCurrent World State:\n{simulator.world.to_json()}\n"
                     plan = self.get_actions(prompt)
                     log_model_conversation(f"{COLOR_CODES['BLUE']}next actions: {json.dumps(plan, indent=2)}{RESET}")
+                    
+                    # Check if plan is empty
+                    if not plan or (isinstance(plan, dict) and len(plan) == 0):
+                        raise ValueError("Received empty plan from the model.")
                 break
             except Exception as e:
                 logger.error(f"{COLOR_CODES['RED']}Simulation error on attempt {count+1}: {e}{RESET}")

@@ -17,19 +17,14 @@ Map JSON:
         {"x": 5, "y": 0, "type": "station", "name": "table1", "item": "plate"},
         {"x": 6, "y": 0, "type": "station", "name": "serving_window"},
         {"x": 7, "y": 0, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 1, "type": "obstacle", "name": "wall"},
         {"x": 7, "y": 1, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 2, "type": "obstacle", "name": "wall"},
         {"x": 7, "y": 2, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 3, "type": "obstacle", "name": "wall"},
         {"x": 7, "y": 3, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 4, "type": "obstacle", "name": "wall"},
         {"x": 7, "y": 4, "type": "obstacle", "name": "wall"},
-
         {"x": 0, "y": 5, "type": "obstacle", "name": "wall"},
         {"x": 1, "y": 5, "type": "station", "name": "sink"},
         {"x": 2, "y": 5, "type": "station", "name": "plate_return"},
@@ -42,10 +37,10 @@ Map JSON:
 }
 
 Recipes:
-- salad_advanced: Put chopped lettuce and chopped tomato together to a plate to make a salad.
+['salad_advanced: Put chopped lettuce and chopped tomato together to a plate to make a salad.']
 
 Orders:
-[salad_advanced]
+['salad_advanced']
 """
 
 output = """
@@ -88,7 +83,6 @@ output = """
         "serve_salad": 0,
         "END": 0
     },
-    
     "plan": {
         "agent1": [
             {"action": "MoveTo", "target": [1, 1]},

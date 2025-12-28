@@ -36,27 +36,28 @@ class IOAgent(Agent):
     def run_test(self, simulator: Simulator, recipes: list, examples: list = [], retries=3) -> dict:
         """Run test with the given world and simulator, using the provided examples for context."""
         self.initiate_chat(examples)
-        world = simulator.world
-        prompt = f"Map JSON:\n{json.dumps(world.map_data)}\n\nRecipes:\n{recipes}\n\nOrders:\n{str(world.orders)}"
-        plan = self.get_actions(prompt)
-        log_model_conversation(f"{COLOR_CODES['BLUE']}final plan: {plan}{RESET}")
-
-        count = 0
         simulator_copy = deepcopy(simulator)
+        simulator = simulator_copy
+        prompt = None
+        plan = {}
+        count = 0
+        retry_error = None
         while count < retries:
-            simulator = deepcopy(simulator_copy)
-            world = simulator.world
             try:
+                if count == 0:
+                    prompt = f"Map JSON:\n{json.dumps(simulator.world.map_data)}\n\nRecipes:\n{recipes}\n\nOrders:\n{str(simulator.world.orders)}"
+                else:
+                    prompt = self.REFINE_INSTRUCTION.format(error=str(retry_error), world_json=simulator.world.to_json())
+                plan = self.get_actions(prompt)
+                log_model_conversation(f"{COLOR_CODES['BLUE']}plan: {plan}{RESET}")
+                simulator = deepcopy(simulator_copy)
                 simulator.submit_plan(plan)
                 simulator.run_simulation(raise_on_error=True)
                 break
             except Exception as e:
                 logger.error(f"{COLOR_CODES['RED']}Simulation error on attempt {count+1}: {e}{RESET}")
+                retry_error = e
                 count += 1
                 if count == retries:
                     return self.create_result(simulator, count, plan, str(e))
-                prompt = self.REFINE_INSTRUCTION.format(error=str(e), world_json=simulator.world.to_json())
-                plan = self.get_actions(prompt)
-                log_model_conversation(f"{COLOR_CODES['BLUE']}plan after refinement: {plan}{RESET}")
-
         return self.create_result(simulator, count, plan)
