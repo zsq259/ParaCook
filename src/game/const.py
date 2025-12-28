@@ -1,3 +1,4 @@
+MOVE_TIME = 1 # Time per movement unit
 INTERACT_TIME = 0  # Time for interaction actions like pickup and drop
 PROCESS_CUT_TIME = 4  # Time for cutting
 PROCESS_POT_COOK_TIME = 16  # Time for cooking in pot
