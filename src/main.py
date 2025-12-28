@@ -7,7 +7,7 @@ import argparse
 import datetime
 from src.game.world_state import World
 from src.game.simulator import Simulator
-from src.utils.utils import get_model_wrapper
+from src.utils.utils import get_model_wrapper, load_data
 from src.agent.method.IO.IO import IOAgent
 from src.agent.method.CoT.CoT import CoTAgent
 from src.agent.method.PLaG.PLaG import PLaGAgent
@@ -27,15 +27,11 @@ name_to_agent = {
     "Human": HumanAgent,
 }
 
-def load_data(filename):
-    with open(filename, 'r', encoding='utf-8') as f:
-        return json.load(f)
-
 def run_test(args):
     log_dir = "logs"
     now = datetime.datetime.now()
     date_str = now.strftime("%y-%m-%d")
-    run_time_str = now.strftime("%H-%M-%S")
+    run_time_str = now.strftime("%H-%M-%S") + f"-{os.getpid()}"
     run_log_dir = os.path.join(log_dir, date_str, args.batch_log_id, run_time_str)
     set_log_dir(run_log_dir)
 
@@ -54,6 +50,13 @@ def run_test(args):
             if data.get("time", 0) > 0:
                 logger.info(f"{COLOR_CODES['GREEN']}result file {result_path} already exists, skipping execution.{RESET}")
                 return
+            elif data.get("retry_count", 0) > 0:
+                if data.get("error", "") and "Error code: 403" in data.get("error", ""):
+                    logger.info(f"{COLOR_CODES['RED']}result file {result_path} exists with error 403, re-executing.{RESET}")
+                else:
+                    logger.info(f"{COLOR_CODES['YELLOW']}result file {result_path} exists with retry_count > 0, skipping execution.{RESET}")
+                    return
+
     # --- 1. Load configuration data ---
     map_data = load_data(f'{args.map}.json')
     ingredient_data = load_data(f'config/item/{args.ingredient}.json')
@@ -82,6 +85,8 @@ def run_test(args):
     model = model_wrapper(args.model)
     agent = name_to_agent[args.agent](model, log_dir=run_log_dir)
     result = agent.run_test(simulator, recipes, args.examples if args.examples else [])
+    
+    result["log_dir"] = run_log_dir
     
     logger.info(f"{COLOR_CODES['GREEN']}Results saved to: {result_path}{RESET}")
     if result_path:
